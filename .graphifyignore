@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .graphifyignore — reduce structural/scaffolding noise in the Graphify graph.
+#
+# Goal: keep DOMAIN signal (source code, services, controllers, entities,
+# shared libs, architecture docs, runtime/infra topology) and drop the Nx/TS
+# CONFIG scaffolding that explodes into hundreds of near-duplicate
+# `compilerOptions` / `dependencies` / target-config nodes.
+#
+# Semantics: gitignore rules, merged AFTER .gitignore (last-match-wins, `!`
+# negations supported). This can only ever exclude MORE than .gitignore.
+# node_modules/, dist/, coverage/, tmp/, out-tsc/ and .nx/cache are already
+# excluded by .gitignore.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Graph + tool outputs — never graph the graph itself
+graphify-out/
+.nx/
+
+# ── TypeScript project/config files ──────────────────────────────────────────
+# 1 tsconfig per project × 4 variants (base/app/lib/spec) → the single biggest
+# noise source (every `compilerOptions` flag becomes a node). Pure build config;
+# no domain/architecture signal.
+tsconfig.json
+tsconfig.*.json
+**/tsconfig.json
+**/tsconfig.*.json
+
+# ── Nx workspace config ──────────────────────────────────────────────────────
+# Plugins/targets/namedInputs → config-only, regenerable, high node count.
+nx.json
+
+# ── Package manifests & lockfiles ────────────────────────────────────────────
+# NOTE (partial-exclusion decision): today every service's package.json holds
+# IDENTICAL framework deps (@nestjs/*, rxjs, tslib) and inlined Nx targets —
+# pure noise, zero cross-service boundary signal (services talk via gRPC/RabbitMQ
+# and share @orbit/* libs, not via package.json deps). So they are excluded.
+# RE-INCLUDE per-service manifests once a service actually declares real
+# `@orbit/*` dependencies (then package.json encodes true service→lib boundaries):
+#   e.g. add below:  !apps/*/package.json   and   !libs/*/package.json
+package.json
+**/package.json
+package-lock.json
+**/package-lock.json
+
+# project.json — none today (TS-solution inlines Nx config in package.json);
+# kept here so a future switch to project.json stays noise-free by default.
+**/project.json
+
+# ── Lint / test / build / bundler config ─────────────────────────────────────
+eslint.config.mjs
+**/eslint.config.mjs
+jest.config.ts
+jest.preset.js
+**/jest.config.ts
+**/jest.config.cts
+**/webpack.config.js
+**/next.config.js
+**/postcss.config.js
+**/.swcrc
+**/.spec.swcrc
+
+# Generated TS shims (Next.js) — not authored, no signal
+**/next-env.d.ts
+**/index.d.ts
+
+# ── Editor / formatter / agent-harness config ────────────────────────────────
+.vscode/
+.prettierrc
+.prettierignore
+.editorconfig
+.claude/settings.json
+.claude/settings.local.json
+.claude/worktrees/
+# .claude/skills/ IS graphed — the orbit-* build playbooks are domain knowledge, not config noise
+
+# ── Nx template tooling docs (create-nx-workspace scaffolding, NOT Orbit domain)
+# These generated skill/agent/prompt docs created the CI-monitor / nx-import /
+# nx-generate communities and a large share of dangling semantic edges.
+# NOTE: .github/workflows/ci.yml is deliberately KEPT (real CI/deploy signal).
+.github/skills/
+.github/agents/
+.github/prompts/
