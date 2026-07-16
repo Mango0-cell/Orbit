@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/users-service"
+    },
+    {
+      "path": "./apps/content-service"
+    },
+    {
+      "path": "./apps/chat-service"
+    },
+    {
+      "path": "./apps/notifications-service"
+    },
+    {
+      "path": "./apps/orbit-frontend"
+    },
+    {
+      "path": "./libs/shared-types"
+    },
+    {
+      "path": "./libs/message-broker"
+    },
+    {
+      "path": "./libs/shared-auth"
+    }
+  ]
+}
