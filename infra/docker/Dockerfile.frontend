@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+#
+# Image for the Orbit Next.js frontend.
+#
+#   docker build -f infra/docker/Dockerfile.frontend -t orbit/orbit-frontend:local .
+#
+# NOTE: this is a functional scaffold that serves the production build via
+# `nx start`. Converting to Next.js `output: "standalone"` for a slim image is a
+# deployment-phase optimization (see CLAUDE.md → Deployment).
+
+ARG NODE_VERSION=22-alpine
+
+# ---------- build stage ----------
+FROM node:${NODE_VERSION} AS build
+WORKDIR /workspace
+COPY . .
+RUN npm ci
+RUN npx nx build orbit-frontend --configuration=production
+
+# ---------- runtime stage ----------
+FROM node:${NODE_VERSION} AS runtime
+ENV NODE_ENV=production
+ENV PORT=3000
+WORKDIR /workspace
+COPY --from=build /workspace ./
+RUN npm prune --omit=dev
+EXPOSE 3000
+CMD ["npx", "nx", "start", "orbit-frontend"]

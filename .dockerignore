@@ -1,0 +1,18 @@
+# Keep the Docker build context small and reproducible.
+# Everything the image needs is either committed source or produced by `npm ci`
+# / `nx build` inside the build stage.
+
+**/node_modules
+**/dist
+**/.next
+**/out-tsc
+.nx
+.git
+.github
+.vscode
+.claude
+coverage
+tmp
+*.log
+.DS_Store
+Thumbs.db

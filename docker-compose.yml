@@ -1,0 +1,156 @@
+# Orbit — local development stack.
+#
+# Brings up the full microservice topology on one machine:
+#   - one PostgreSQL container hosting the four per-service databases
+#   - RabbitMQ (Pub/Sub broker) with the management UI
+#   - the four NestJS services + the Next.js frontend
+#
+# Nginx and Kubernetes are intentionally NOT part of this file — they belong to
+# the deployment phase (see CLAUDE.md → Deployment). For local dev each service
+# is published directly on its host port, so the frontend talks to services by
+# their localhost ports.
+#
+#   docker compose up --build            # everything
+#   docker compose up postgres rabbitmq  # just the backing services (run apps via `nx serve`)
+
+name: orbit
+
+services:
+  # ---------------------------------------------------------------- backing services
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: orbit
+      POSTGRES_PASSWORD: orbit
+      POSTGRES_DB: orbit
+    ports:
+      - '5432:5432'
+    volumes:
+      - orbit-postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U orbit']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: orbit
+      RABBITMQ_DEFAULT_PASS: orbit
+    ports:
+      - '5672:5672'   # AMQP
+      - '15672:15672' # management UI → http://localhost:15672 (orbit / orbit)
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------- services
+  users-service:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.service
+      args:
+        APP: users-service
+    environment:
+      PORT: 3001
+      GRPC_URL: 0.0.0.0:50051
+      DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_users
+      RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
+    ports:
+      - '3001:3001'   # REST
+      - '50051:50051' # gRPC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  content-service:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.service
+      args:
+        APP: content-service
+    environment:
+      PORT: 3002
+      GRPC_URL: 0.0.0.0:50052
+      DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_content
+      RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
+      USERS_GRPC_URL: users-service:50051 # sync backend-to-backend call (profile visibility, etc.)
+    ports:
+      - '3002:3002'   # REST
+      - '50052:50052' # gRPC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      users-service:
+        condition: service_started
+
+  chat-service:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.service
+      args:
+        APP: chat-service
+    environment:
+      PORT: 3003
+      GRPC_URL: 0.0.0.0:50053
+      DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_chat
+      RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
+      USERS_GRPC_URL: users-service:50051
+    ports:
+      - '3003:3003'   # WebSocket + REST
+      - '50053:50053' # gRPC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notifications-service:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.service
+      args:
+        APP: notifications-service
+    environment:
+      PORT: 3004
+      GRPC_URL: 0.0.0.0:50054
+      DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_notifications
+      RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672 # primarily an event consumer
+    ports:
+      - '3004:3004'   # REST + WebSocket (push)
+      - '50054:50054' # gRPC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------- frontend
+  orbit-frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.frontend
+    environment:
+      PORT: 3000
+      NEXT_PUBLIC_USERS_API: http://localhost:3001/api
+      NEXT_PUBLIC_CONTENT_API: http://localhost:3002/api
+      NEXT_PUBLIC_NOTIFICATIONS_API: http://localhost:3004/api
+      NEXT_PUBLIC_CHAT_WS: ws://localhost:3003
+    ports:
+      - '3000:3000'
+    depends_on:
+      users-service:
+        condition: service_started
+      content-service:
+        condition: service_started
+
+volumes:
+  orbit-postgres-data:

@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1
+#
+# Generic image for any Orbit NestJS service (users / content / chat / notifications).
+# One Dockerfile, one image per service — selected by the `APP` build arg:
+#
+#   docker build -f infra/docker/Dockerfile.service --build-arg APP=users-service \
+#     -t orbit/users-service:local .
+#
+# The build context MUST be the repo root so Nx and the workspace libs
+# (@orbit/shared-types, @orbit/message-broker) are available to the build.
+
+ARG NODE_VERSION=22-alpine
+
+# ---------- build stage ----------
+FROM node:${NODE_VERSION} AS build
+ARG APP
+WORKDIR /workspace
+
+# Copy the whole monorepo (kept small by .dockerignore) so npm can resolve every
+# workspace member before the app build. Layer-caching is optimized later, in the
+# deployment phase.
+COPY . .
+RUN npm ci
+
+# Build the target app, then produce a self-contained deployable.
+# `nx prune` emits apps/${APP}/dist/{main.js, package.json, package-lock.json, workspace_modules/}.
+RUN npx nx build "${APP}" --configuration=production \
+ && npx nx prune "${APP}"
+
+# ---------- runtime stage ----------
+FROM node:${NODE_VERSION} AS runtime
+ARG APP
+ENV NODE_ENV=production
+WORKDIR /app
+
+COPY --from=build /workspace/apps/${APP}/dist ./
+RUN npm ci --omit=dev
+
+# PORT (REST/WS) and gRPC/DB/RabbitMQ URLs are injected at runtime
+# (see docker-compose.yml for local dev, k8s manifests for production).
+CMD ["node", "main.js"]
