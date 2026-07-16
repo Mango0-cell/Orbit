@@ -113,11 +113,3 @@ self-healing) are **defined but not configured yet** — that's the final phase.
 The rules and routing contract live in [`CLAUDE.md`](./CLAUDE.md) and
 [`infra/`](./infra). Each app builds to its own image (`orbit/<app>:<tag>`)
 pushed to a registry by CI on merge to `main`.
-
-## Documentation map
-
-| File | Purpose |
-| ---- | ------- |
-| [`CLAUDE.md`](./CLAUDE.md) | Architecture, data model, comms rules, deployment concepts — the source of truth. |
-| [`AGENTS.md`](./AGENTS.md) | How tasks are delegated to skills/agents, and the guardrails. |
-| [`infra/README.md`](./infra/README.md) | What each infra directory is and its status. |
