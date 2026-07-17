@@ -17,5 +17,9 @@ module.exports = {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
+  // Resolve nodenext-style ".js" relative imports back to their ".ts" source.
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   coverageDirectory: 'test-output/jest/coverage',
 };
