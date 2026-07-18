@@ -57,3 +57,6 @@ out
 graphify-out/
 
 test-output
+
+# TypeScript incremental build info (generated)
+*.tsbuildinfo
