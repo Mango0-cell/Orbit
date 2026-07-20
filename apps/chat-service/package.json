@@ -88,6 +88,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
+    "@orbit/nest-common": "*",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "reflect-metadata": "^0.2.0",
