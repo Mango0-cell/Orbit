@@ -54,6 +54,7 @@
     "nx": "23.0.1",
     "postcss": "^8.5.16",
     "prettier": "^3.8.1",
+    "swc-loader": "^0.2.7",
     "tailwindcss": "^4.3.2",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",
