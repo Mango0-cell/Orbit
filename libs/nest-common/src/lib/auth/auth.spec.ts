@@ -5,7 +5,7 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
-import { verifyJwt } from './jwt';
+import { signJwt, verifyJwt } from './jwt';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { PoliciesGuard } from './policies.guard';
 import {
@@ -50,6 +50,13 @@ describe('verifyJwt', () => {
   });
   it('fails closed when the secret is empty', () => {
     expect(verifyJwt(tok({ sub: 'u1', accountType: 'public' }), '')).toBeNull();
+  });
+});
+
+describe('signJwt', () => {
+  it('round-trips through verifyJwt', () => {
+    const token = signJwt({ id: 'u1', accountType: 'private' }, SECRET);
+    expect(verifyJwt(token, SECRET)).toEqual({ id: 'u1', accountType: 'private' });
   });
 });
 

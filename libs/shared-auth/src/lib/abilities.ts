@@ -1,4 +1,5 @@
 import { AbilityBuilder, createMongoAbility, type ForcedSubject, type MongoAbility } from '@casl/ability';
+import { permittedFieldsOf } from '@casl/ability/extra';
 import type {
   AccountSettingsSubject,
   DirectMessageSubject,
@@ -31,6 +32,22 @@ export type AppAbility = MongoAbility<[Actions, AppSubjects]>;
 
 /** Profile fields ANY viewer (including guests) may read — the "minimal card". */
 export const CARD_FIELDS = ['username', 'displayName', 'avatarUrl', 'accountType'] as const;
+
+/** Every Profile field the policy can grant read on (minimal card + gated full-profile fields). */
+export const PROFILE_READ_FIELDS = [...CARD_FIELDS, 'bio'] as const;
+
+/**
+ * The Profile fields a viewer may read, per the field-level CASL policy. Rules that name
+ * fields (the card rule) contribute exactly those; rules without fields (public / owner /
+ * friend) grant every {@link PROFILE_READ_FIELDS} entry. Consumers render the full profile
+ * when a gated field (e.g. `bio`) is permitted, otherwise the minimal card.
+ */
+export function readableProfileFields(ability: AppAbility, profileSubject: ProfileSubject): string[] {
+  // `profileSubject` must be tagged via asProfile() so CASL resolves it as 'Profile' at runtime.
+  return permittedFieldsOf(ability, 'read', profileSubject as never, {
+    fieldsFrom: (rule) => rule.fields ?? [...PROFILE_READ_FIELDS],
+  });
+}
 
 /** A viewer is a guest when there is no authenticated principal. */
 export function isGuest(viewer: Viewer): viewer is null {
