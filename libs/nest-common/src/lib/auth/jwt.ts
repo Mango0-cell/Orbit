@@ -1,4 +1,4 @@
-import { verify } from 'jsonwebtoken';
+import { sign, verify, type SignOptions } from 'jsonwebtoken';
 import type { AccountType, AuthUser } from '@orbit/shared-auth';
 
 /** Shape of Orbit's JWT payload (decentralized: every service verifies locally). */
@@ -23,4 +23,14 @@ export function verifyJwt(token: string, secret: string): AuthUser | null {
   } catch {
     return null;
   }
+}
+
+/** Issue a JWT for a user, signed with the shared secret. Only the auth owner (users-service) calls this. */
+export function signJwt(
+  user: AuthUser,
+  secret: string,
+  expiresIn: SignOptions['expiresIn'] = '1h',
+): string {
+  const payload: JwtPayload = { sub: user.id, accountType: user.accountType };
+  return sign(payload, secret, { expiresIn });
 }
