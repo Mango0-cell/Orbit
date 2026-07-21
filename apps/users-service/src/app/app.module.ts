@@ -1,12 +1,8 @@
 import { Module } from '@nestjs/common';
 import { OrbitCommonModule } from '@orbit/nest-common';
-import { DatabaseModule } from './database/database.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [OrbitCommonModule.forRoot(), DatabaseModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [OrbitCommonModule.forRoot(), UsersModule],
 })
 export class AppModule {}
