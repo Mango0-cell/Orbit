@@ -35,6 +35,9 @@
     },
     {
       "path": "../../libs/nest-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/message-broker/tsconfig.lib.json"
     }
   ]
 }

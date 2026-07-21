@@ -22,6 +22,7 @@ module.exports = {
     '^@orbit/shared-auth$': '<rootDir>/../../libs/shared-auth/src/index.ts',
     '^@orbit/shared-types$': '<rootDir>/../../libs/shared-types/src/index.ts',
     '^@orbit/nest-common$': '<rootDir>/../../libs/nest-common/src/index.ts',
+    '^@orbit/message-broker$': '<rootDir>/../../libs/message-broker/src/index.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   coverageDirectory: 'test-output/jest/coverage',

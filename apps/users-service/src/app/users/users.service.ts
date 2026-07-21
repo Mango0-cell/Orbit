@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { PasswordService } from './password.service';
+import { UserEventsPublisher } from '../events/user-events.publisher';
 import type { RegisterDto } from './dto/register.dto';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -15,6 +16,7 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity) private readonly repo: Repository<UserEntity>,
     private readonly passwords: PasswordService,
+    private readonly events: UserEventsPublisher,
   ) {}
 
   async register(dto: RegisterDto): Promise<UserEntity> {
@@ -31,7 +33,9 @@ export class UsersService {
       account_type: dto.accountType,
       settings: UserEntity.newSettings(),
     });
-    return this.repo.save(user);
+    const saved = await this.repo.save(user);
+    await this.events.created(saved);
+    return saved;
   }
 
   async validateCredentials(email: string, password: string): Promise<UserEntity> {
@@ -61,7 +65,10 @@ export class UsersService {
     for (const key of Object.keys(patch) as (keyof UserEntity)[]) {
       if (patch[key] === undefined) delete patch[key];
     }
+    const changedFields = Object.keys(patch);
     await this.repo.update({ user_id: userId }, patch);
-    return this.repo.findOneOrFail({ where: { user_id: userId } });
+    const updated = await this.repo.findOneOrFail({ where: { user_id: userId } });
+    await this.events.profileUpdated(userId, changedFields);
+    return updated;
   }
 }
