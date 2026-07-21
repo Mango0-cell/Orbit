@@ -1,4 +1,4 @@
-import { asProfile, type AppAbility, type Relationship } from '@orbit/shared-auth';
+import { asProfile, readableProfileFields, type AppAbility } from '@orbit/shared-auth';
 import type { OwnProfile, UserCard, UserProfile } from '@orbit/shared-types';
 import { UserEntity } from './user.entity';
 
@@ -44,12 +44,11 @@ export function serializeProfileFor(
   viewerId: string | null,
   ability: AppAbility,
 ): UserProfile | UserCard {
-  // Follow is not built yet: relationship is 'none' unless the viewer is the owner.
-  const relationship: Relationship = viewerId === target.user_id ? 'friend' : 'none';
   const subject = asProfile({
     ownerId: target.user_id,
     accountType: target.account_type,
-    relationship,
+    // Follow graph is not built yet; the owner path is handled explicitly below.
+    relationship: 'none',
     username: target.tag_name,
     displayName: target.display_name,
     avatarUrl: target.profile_photo ?? undefined,
@@ -57,7 +56,10 @@ export function serializeProfileFor(
     settings: target.settings,
   });
   const full = toProfile(target);
-  if (viewerId === target.user_id || ability.can('read', subject, 'bio')) {
+  // Owner always reads their own full profile (own-resource rule); everyone else reads it
+  // only when the field-level policy permits a gated (non-card) field such as `bio`.
+  const permitted = readableProfileFields(ability, subject);
+  if (viewerId === target.user_id || permitted.includes('bio')) {
     return full;
   }
   return toCard(full);

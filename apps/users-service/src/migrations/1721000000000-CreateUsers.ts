@@ -17,7 +17,7 @@ export class CreateUsers1721000000000 implements MigrationInterface {
         "genre" varchar,
         "age" integer,
         "account_type" varchar NOT NULL DEFAULT 'public',
-        "settings" jsonb NOT NULL DEFAULT '{}',
+        "settings" jsonb NOT NULL DEFAULT '{"postsVisibleToFriends":true,"allowFriendComments":true,"allowFriendReactions":true,"allowFollowerMessageRequests":true}',
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
         CONSTRAINT "PK_users_user_id" PRIMARY KEY ("user_id")
