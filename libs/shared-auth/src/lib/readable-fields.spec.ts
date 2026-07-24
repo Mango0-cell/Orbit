@@ -12,15 +12,15 @@ const privateP = asProfile({
 });
 
 describe('readableProfileFields', () => {
-  it('grants gated fields (bio) on a public profile', () => {
+  it('grants all fields (card + gated) on a public profile', () => {
     const fields = readableProfileFields(defineAbilitiesFor({ id: 'v', accountType: 'public' }), publicP);
-    expect(fields).toContain('bio');
+    expect(fields).toEqual(expect.arrayContaining(['bio', 'location']));
   });
 
-  it('grants only card fields on a private profile to a stranger', () => {
+  it('grants the card (incl. bio) but no gated fields on a private profile to a stranger', () => {
     const fields = readableProfileFields(defineAbilitiesFor({ id: 'v', accountType: 'public' }), privateP);
-    expect(fields).not.toContain('bio');
-    expect(fields).toEqual(expect.arrayContaining(['username', 'displayName']));
+    expect(fields).toEqual(expect.arrayContaining(['username', 'displayName', 'bio']));
+    expect(fields).not.toContain('location');
   });
 
   it('grants gated fields to a friend of a private profile', () => {
@@ -29,11 +29,12 @@ describe('readableProfileFields', () => {
       username: 'o', displayName: 'O', avatarUrl: 'a', bio: 'secret',
     });
     const fields = readableProfileFields(defineAbilitiesFor({ id: 'v', accountType: 'public' }), friendP);
-    expect(fields).toContain('bio');
+    expect(fields).toContain('location');
   });
 
-  it('grants only card fields to a guest viewing a private profile', () => {
+  it('grants a guest the card (incl. bio) but no gated fields on a private profile', () => {
     const fields = readableProfileFields(defineAbilitiesFor(null), privateP);
-    expect(fields).not.toContain('bio');
+    expect(fields).toContain('bio');
+    expect(fields).not.toContain('location');
   });
 });

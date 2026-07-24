@@ -24,13 +24,14 @@ describe('serializeProfileFor', () => {
     expect((out as { bio?: string }).bio).toBe('secret');
   });
 
-  it('returns only the card for a private account viewed by a stranger', () => {
+  it('returns the card (with public bio, no gated fields) for a private account viewed by a stranger', () => {
     const out = serializeProfileFor(
       entity({ account_type: 'private' }),
       'v1',
       defineAbilitiesFor({ id: 'v1', accountType: 'public' }),
     );
-    expect((out as { bio?: string }).bio).toBeUndefined();
+    expect(out.bio).toBe('secret'); // bio is public/card-level now
+    expect((out as { createdAt?: string }).createdAt).toBeUndefined(); // gated full-only field
     expect(out.tagName).toBe('owner');
     expect(out.accountType).toBe('private');
   });
@@ -44,9 +45,10 @@ describe('serializeProfileFor', () => {
     expect((out as { bio?: string }).bio).toBe('secret');
   });
 
-  it('returns only the card to a guest viewing a private account', () => {
+  it('returns the card (with public bio) to a guest viewing a private account', () => {
     const out = serializeProfileFor(entity({ account_type: 'private' }), null, defineAbilitiesFor(null));
-    expect((out as { bio?: string }).bio).toBeUndefined();
+    expect(out.bio).toBe('secret');
+    expect((out as { createdAt?: string }).createdAt).toBeUndefined();
     expect(out.tagName).toBe('owner');
   });
 });

@@ -7,11 +7,12 @@ export interface UserCard {
   displayName: string;
   avatarUrl: string | null;
   accountType: AccountType;
+  /** Public-level: shown on every profile, including private accounts, to any viewer. */
+  bio: string | null;
 }
 
-/** Full public profile (returned when the viewer is allowed to see it). */
+/** Full profile (returned when the viewer is allowed to see the gated fields). */
 export interface UserProfile extends UserCard {
-  bio: string | null;
   job: string | null;
   location: string | null;
   websiteUrl: string | null;

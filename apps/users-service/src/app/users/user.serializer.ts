@@ -1,4 +1,4 @@
-import { asProfile, readableProfileFields, type AppAbility } from '@orbit/shared-auth';
+import { asProfile, readableProfileFields, FULL_PROFILE_FIELDS, type AppAbility } from '@orbit/shared-auth';
 import type { OwnProfile, UserCard, UserProfile } from '@orbit/shared-types';
 import { UserEntity } from './user.entity';
 
@@ -31,13 +31,14 @@ function toCard(p: UserProfile): UserCard {
     displayName: p.displayName,
     avatarUrl: p.avatarUrl,
     accountType: p.accountType,
+    bio: p.bio,
   };
 }
 
 /**
  * Serialize a target user for a viewer, honoring the CASL Profile field-level policy:
- * full profile when the viewer may read a gated field (public account, friend, or owner),
- * otherwise the minimal card only.
+ * full profile when the viewer may read a gated (full-profile) field — public account,
+ * friend, or owner — otherwise the minimal card (which includes the public `bio`).
  */
 export function serializeProfileFor(
   target: UserEntity,
@@ -57,9 +58,12 @@ export function serializeProfileFor(
   });
   const full = toProfile(target);
   // Owner always reads their own full profile (own-resource rule); everyone else reads it
-  // only when the field-level policy permits a gated (non-card) field such as `bio`.
+  // only when the field-level policy permits a gated full-profile field (e.g. `location`).
+  // `bio` is card-level and therefore always present, even on the card.
   const permitted = readableProfileFields(ability, subject);
-  if (viewerId === target.user_id || permitted.includes('bio')) {
+  const canSeeFull =
+    viewerId === target.user_id || FULL_PROFILE_FIELDS.some((f) => permitted.includes(f));
+  if (canSeeFull) {
     return full;
   }
   return toCard(full);

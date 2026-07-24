@@ -72,9 +72,10 @@ build subjects must uphold:
    and owner `settings` are resolved on the server (relationship via gRPC to users-service) —
    **never** accepted from the client. A spoofed `relationship: 'friend'` would defeat the policy.
 2. **Field-level reads must be honored on serialization.** The minimal card exposes only
-   `username / displayName / avatarUrl / accountType`. When returning a private, non-friend
-   profile, the service must emit **only** those fields (e.g. via CASL `permittedFieldsOf`) —
-   returning the full row would leak `bio`/settings even though `can('read', …, 'bio')` is false.
+   `username / displayName / avatarUrl / accountType / bio` (`bio` is public-level, shown on every
+   profile). When returning a private, non-friend profile, the service must emit **only** the card
+   fields (e.g. via CASL `permittedFieldsOf`) — returning the full row would leak gated fields like
+   `location`/settings even though `can('read', …, 'location')` is false.
 
 ## Out of scope (next phases)
 NestJS `JwtAuthGuard` / `PoliciesGuard`, JWT verification, relationship resolution over gRPC,

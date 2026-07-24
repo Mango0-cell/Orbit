@@ -31,9 +31,10 @@ describe('Orbit authorization policies (CASL)', () => {
       expect(a.can('read', publicPost())).toBe(true);
       expect(a.can('read', publicProfile(), 'bio')).toBe(true);
     });
-    it('sees only the minimal card of a private profile', () => {
+    it('sees the card of a private profile (incl. public bio) but no gated fields', () => {
       expect(a.can('read', privateProfile(), 'username')).toBe(true);
-      expect(a.can('read', privateProfile(), 'bio')).toBe(false);
+      expect(a.can('read', privateProfile(), 'bio')).toBe(true);
+      expect(a.can('read', privateProfile(), 'location')).toBe(false);
     });
     it('cannot read private posts', () => expect(a.can('read', privatePost())).toBe(false));
     it('cannot interact at all', () => {
@@ -68,9 +69,10 @@ describe('Orbit authorization policies (CASL)', () => {
   describe('authenticated — private targets', () => {
     const a = defineAbilitiesFor(authed);
 
-    it('stranger sees only the card, no posts, no interaction', () => {
+    it('stranger sees the card (incl. bio) but no gated fields, posts, or interaction', () => {
       expect(a.can('read', privateProfile('none'), 'username')).toBe(true);
-      expect(a.can('read', privateProfile('none'), 'bio')).toBe(false);
+      expect(a.can('read', privateProfile('none'), 'bio')).toBe(true);
+      expect(a.can('read', privateProfile('none'), 'location')).toBe(false);
       expect(a.can('read', privatePost('none'))).toBe(false);
       expect(a.can('react', privatePost('none'))).toBe(false);
       expect(a.can('comment', privatePost('none'))).toBe(false);
@@ -78,8 +80,9 @@ describe('Orbit authorization policies (CASL)', () => {
       expect(a.can('request-message', dm('private', 'none'))).toBe(false);
     });
 
-    it('follower still cannot see profile/posts', () => {
-      expect(a.can('read', privateProfile('follower'), 'bio')).toBe(false);
+    it('follower reads the card (incl. bio) but not gated fields or posts', () => {
+      expect(a.can('read', privateProfile('follower'), 'bio')).toBe(true);
+      expect(a.can('read', privateProfile('follower'), 'location')).toBe(false);
       expect(a.can('read', privatePost('follower'))).toBe(false);
     });
 
@@ -95,6 +98,7 @@ describe('Orbit authorization policies (CASL)', () => {
 
     it('friend reads the full profile and posts (default settings)', () => {
       expect(a.can('read', privateProfile('friend'), 'bio')).toBe(true);
+      expect(a.can('read', privateProfile('friend'), 'location')).toBe(true);
       expect(a.can('read', privatePost('friend'))).toBe(true);
     });
 

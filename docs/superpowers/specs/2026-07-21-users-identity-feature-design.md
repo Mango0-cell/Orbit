@@ -36,7 +36,8 @@ TypeORM entity; `timestamptz` timestamps.
 | `password` | varchar, not null | **bcrypt hash** (never returned) |
 | `tag_name` | varchar, **unique**, not null | the `@handle` |
 | `display_name` | varchar, not null | |
-| `bio` / `job` / `location` / `website_url` / `profile_photo` | varchar, null | full-profile fields |
+| `bio` | varchar, null | **card-level** — public on every profile, incl. private |
+| `job` / `location` / `website_url` / `profile_photo` | varchar, null | full-profile (gated) fields |
 | `genre` | varchar, null | |
 | `age` | int, null | |
 | `account_type` | varchar, not null, default `'public'` | `'public' \| 'private'` |
@@ -63,9 +64,9 @@ Indexes: unique on `email` and `tag_name`.
   (alongside `verifyJwt`), signing `{ sub: userId, accountType }` with `JWT_SECRET` and an
   expiry. `users-service` is the only issuer; every service verifies via the guard.
 - **Policy application on `GET /api/users/:idOrTag`:** build a `ProfileSubject`
-  (`ownerId`, `accountType`, `relationship`, card fields, `bio`, `settings`), then serialize with
-  CASL `permittedFieldsOf(ability, 'read', subject)` — owner/public → all fields (`UserProfile`),
-  private stranger → card fields only (`UserCard`). Enforces the policy spec's field-level invariant.
+  (`ownerId`, `accountType`, `relationship`, card fields incl. `bio`, `settings`), then serialize with
+  CASL `permittedFieldsOf(ability, 'read', subject)` — owner/public/friend → all fields (`UserProfile`),
+  private stranger → card only (`UserCard`, which includes the public `bio`). Enforces the policy spec's field-level invariant.
 
 ## Events (`@orbit/message-broker` + `@orbit/shared-types`)
 - `user.created` — `{ userId, tagName, accountType, at }` (consumers: notifications, later).

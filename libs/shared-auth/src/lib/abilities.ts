@@ -30,17 +30,25 @@ type AppSubjects =
 
 export type AppAbility = MongoAbility<[Actions, AppSubjects]>;
 
-/** Profile fields ANY viewer (including guests) may read — the "minimal card". */
-export const CARD_FIELDS = ['username', 'displayName', 'avatarUrl', 'accountType'] as const;
+/**
+ * Profile fields ANY viewer (including guests) may read — the "minimal card".
+ * `bio` is public-level information: it is shown on every profile, including
+ * private accounts, to strangers and guests.
+ */
+export const CARD_FIELDS = ['username', 'displayName', 'avatarUrl', 'accountType', 'bio'] as const;
 
-/** Every Profile field the policy can grant read on (minimal card + gated full-profile fields). */
-export const PROFILE_READ_FIELDS = [...CARD_FIELDS, 'bio'] as const;
+/** Full-profile fields gated behind public-account / owner / friend access. */
+export const FULL_PROFILE_FIELDS = ['job', 'location', 'websiteUrl', 'genre', 'age', 'createdAt'] as const;
+
+/** Every Profile field the policy can grant read on (card + gated full-profile fields). */
+export const PROFILE_READ_FIELDS = [...CARD_FIELDS, ...FULL_PROFILE_FIELDS] as const;
 
 /**
  * The Profile fields a viewer may read, per the field-level CASL policy. Rules that name
  * fields (the card rule) contribute exactly those; rules without fields (public / owner /
  * friend) grant every {@link PROFILE_READ_FIELDS} entry. Consumers render the full profile
- * when a gated field (e.g. `bio`) is permitted, otherwise the minimal card.
+ * when a gated {@link FULL_PROFILE_FIELDS} entry (e.g. `location`) is permitted, otherwise
+ * the minimal card (which now includes `bio`).
  */
 export function readableProfileFields(ability: AppAbility, profileSubject: ProfileSubject): string[] {
   // `profileSubject` must be tagged via asProfile() so CASL resolves it as 'Profile' at runtime.
@@ -75,7 +83,7 @@ export function defineAbilitiesFor(viewer: Viewer): AppAbility {
   ) => void;
 
   // ---- Reads available to EVERYONE, including unauthenticated guests ----
-  can('read', 'Profile', [...CARD_FIELDS]);          // minimal card of any account
+  can('read', 'Profile', [...CARD_FIELDS]);          // minimal card (incl. bio) of any account
   can('read', 'Profile', { accountType: 'public' }); // full public profile (all fields)
   can('read', 'Post', { ownerAccountType: 'public' }); // public posts
 
