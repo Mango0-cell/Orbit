@@ -51,7 +51,10 @@ export class UsersService {
     return saved;
   }
 
-  async validateCredentials(email: string, password: string): Promise<UserEntity> {
+  async validateCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserEntity> {
     const user = await this.repo.findOne({ where: { email } });
     if (!user || !(await this.passwords.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
@@ -60,7 +63,9 @@ export class UsersService {
   }
 
   findByIdOrTag(idOrTag: string): Promise<UserEntity | null> {
-    return this.repo.findOne({ where: [{ user_id: idOrTag }, { tag_name: idOrTag }] });
+    return this.repo.findOne({
+      where: [{ user_id: idOrTag }, { tag_name: idOrTag }],
+    });
   }
 
   async updateOwn(userId: string, dto: UpdateProfileDto): Promise<UserEntity> {
@@ -78,9 +83,13 @@ export class UsersService {
     for (const key of Object.keys(patch) as (keyof UserEntity)[]) {
       if (patch[key] === undefined) delete patch[key];
     }
-    const changedFields = Object.keys(patch).map((col) => COLUMN_TO_FIELD[col] ?? col);
+    const changedFields = Object.keys(patch).map(
+      (col) => COLUMN_TO_FIELD[col] ?? col,
+    );
     await this.repo.update({ user_id: userId }, patch);
-    const updated = await this.repo.findOneOrFail({ where: { user_id: userId } });
+    const updated = await this.repo.findOneOrFail({
+      where: { user_id: userId },
+    });
     await this.events.profileUpdated(userId, changedFields);
     return updated;
   }

@@ -7,7 +7,9 @@ import { UserEntity } from '../users/user.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL ?? 'postgres://orbit:orbit@localhost:5432/db_users',
+      url:
+        process.env.DATABASE_URL ??
+        'postgres://orbit:orbit@localhost:5432/db_users',
       entities: [UserEntity],
       migrationsRun: false,
       synchronize: false,

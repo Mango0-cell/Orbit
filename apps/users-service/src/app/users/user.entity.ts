@@ -24,7 +24,10 @@ export class UserEntity {
   @Column({ type: 'varchar', nullable: true }) genre!: string | null;
   @Column({ type: 'int', nullable: true }) age!: number | null;
   @Column({ type: 'varchar', default: 'public' }) account_type!: AccountType;
-  @Column({ type: 'jsonb', default: () => `'${JSON.stringify(defaultPrivateSettings())}'` })
+  @Column({
+    type: 'jsonb',
+    default: () => `'${JSON.stringify(defaultPrivateSettings())}'`,
+  })
   settings!: PrivateSettings;
   @CreateDateColumn({ type: 'timestamptz' }) created_at!: Date;
   @UpdateDateColumn({ type: 'timestamptz' }) updated_at!: Date;

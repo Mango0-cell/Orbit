@@ -1,24 +1,68 @@
 import { defineAbilitiesFor, isGuest } from './abilities.js';
-import { asProfile, asPost, asDirectMessage, asAccountSettings } from './subjects.js';
+import {
+  asProfile,
+  asPost,
+  asDirectMessage,
+  asAccountSettings,
+} from './subjects.js';
 import { defaultPrivateSettings } from './settings.js';
 import type { AuthUser, PrivateSettings, Relationship } from './types.js';
 
 const PRIV = defaultPrivateSettings();
 
 const publicProfile = (relationship: Relationship = 'none') =>
-  asProfile({ ownerId: 'pub', accountType: 'public', relationship, username: 'pub', displayName: 'Public', avatarUrl: 'a', bio: 'hi' });
+  asProfile({
+    ownerId: 'pub',
+    accountType: 'public',
+    relationship,
+    username: 'pub',
+    displayName: 'Public',
+    avatarUrl: 'a',
+    bio: 'hi',
+  });
 
-const privateProfile = (relationship: Relationship = 'none', settings: PrivateSettings = PRIV) =>
-  asProfile({ ownerId: 'prv', accountType: 'private', relationship, settings, username: 'prv', displayName: 'Private', avatarUrl: 'a', bio: 'secret' });
+const privateProfile = (
+  relationship: Relationship = 'none',
+  settings: PrivateSettings = PRIV,
+) =>
+  asProfile({
+    ownerId: 'prv',
+    accountType: 'private',
+    relationship,
+    settings,
+    username: 'prv',
+    displayName: 'Private',
+    avatarUrl: 'a',
+    bio: 'secret',
+  });
 
 const publicPost = (relationship: Relationship = 'none', ownerId = 'pub') =>
   asPost({ postId: 'p1', ownerId, ownerAccountType: 'public', relationship });
 
-const privatePost = (relationship: Relationship = 'none', ownerSettings: PrivateSettings = PRIV, ownerId = 'prv') =>
-  asPost({ postId: 'p2', ownerId, ownerAccountType: 'private', relationship, ownerSettings });
+const privatePost = (
+  relationship: Relationship = 'none',
+  ownerSettings: PrivateSettings = PRIV,
+  ownerId = 'prv',
+) =>
+  asPost({
+    postId: 'p2',
+    ownerId,
+    ownerAccountType: 'private',
+    relationship,
+    ownerSettings,
+  });
 
-const dm = (recipientAccountType: 'public' | 'private', relationship: Relationship, recipientSettings: PrivateSettings = PRIV) =>
-  asDirectMessage({ recipientId: 'r', recipientAccountType, relationship, recipientSettings });
+const dm = (
+  recipientAccountType: 'public' | 'private',
+  relationship: Relationship,
+  recipientSettings: PrivateSettings = PRIV,
+) =>
+  asDirectMessage({
+    recipientId: 'r',
+    recipientAccountType,
+    relationship,
+    recipientSettings,
+  });
 
 const guest = null;
 const authed: AuthUser = { id: 'me', accountType: 'public' };
@@ -36,7 +80,8 @@ describe('Orbit authorization policies (CASL)', () => {
       expect(a.can('read', privateProfile(), 'bio')).toBe(true);
       expect(a.can('read', privateProfile(), 'location')).toBe(false);
     });
-    it('cannot read private posts', () => expect(a.can('read', privatePost())).toBe(false));
+    it('cannot read private posts', () =>
+      expect(a.can('read', privatePost())).toBe(false));
     it('cannot interact at all', () => {
       expect(a.can('react', publicPost())).toBe(false);
       expect(a.can('comment', publicPost())).toBe(false);
@@ -93,7 +138,9 @@ describe('Orbit authorization policies (CASL)', () => {
 
     it('follower request is blocked when the owner disabled requests', () => {
       const s = { ...PRIV, allowFollowerMessageRequests: false };
-      expect(a.can('request-message', dm('private', 'follower', s))).toBe(false);
+      expect(a.can('request-message', dm('private', 'follower', s))).toBe(
+        false,
+      );
     });
 
     it('friend reads the full profile and posts (default settings)', () => {
@@ -110,10 +157,30 @@ describe('Orbit authorization policies (CASL)', () => {
     });
 
     it('friend access respects owner toggles', () => {
-      expect(a.can('read', privatePost('friend', { ...PRIV, postsVisibleToFriends: false }))).toBe(false);
-      expect(a.can('comment', privatePost('friend', { ...PRIV, allowFriendComments: false }))).toBe(false);
-      expect(a.can('react', privatePost('friend', { ...PRIV, allowFriendReactions: false }))).toBe(false);
-      expect(a.can('share', privatePost('friend', { ...PRIV, allowFriendReactions: false }))).toBe(false);
+      expect(
+        a.can(
+          'read',
+          privatePost('friend', { ...PRIV, postsVisibleToFriends: false }),
+        ),
+      ).toBe(false);
+      expect(
+        a.can(
+          'comment',
+          privatePost('friend', { ...PRIV, allowFriendComments: false }),
+        ),
+      ).toBe(false);
+      expect(
+        a.can(
+          'react',
+          privatePost('friend', { ...PRIV, allowFriendReactions: false }),
+        ),
+      ).toBe(false);
+      expect(
+        a.can(
+          'share',
+          privatePost('friend', { ...PRIV, allowFriendReactions: false }),
+        ),
+      ).toBe(false);
     });
   });
 
@@ -121,7 +188,12 @@ describe('Orbit authorization policies (CASL)', () => {
     const me: AuthUser = { id: 'u1', accountType: 'private' };
     const a = defineAbilitiesFor(me);
     it('full rights over own post regardless of account type', () => {
-      const own = asPost({ postId: 'x', ownerId: 'u1', ownerAccountType: 'private', relationship: 'none' });
+      const own = asPost({
+        postId: 'x',
+        ownerId: 'u1',
+        ownerAccountType: 'private',
+        relationship: 'none',
+      });
       expect(a.can('read', own)).toBe(true);
       expect(a.can('react', own)).toBe(true);
       expect(a.can('comment', own)).toBe(true);
@@ -129,7 +201,9 @@ describe('Orbit authorization policies (CASL)', () => {
     });
     it('manages only its own account settings', () => {
       expect(a.can('manage', asAccountSettings({ ownerId: 'u1' }))).toBe(true);
-      expect(a.can('manage', asAccountSettings({ ownerId: 'other' }))).toBe(false);
+      expect(a.can('manage', asAccountSettings({ ownerId: 'other' }))).toBe(
+        false,
+      );
     });
   });
 });

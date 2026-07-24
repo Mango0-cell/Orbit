@@ -24,7 +24,9 @@ export class CreateUsers1721000000000 implements MigrationInterface {
       )
     `);
     await q.query(`CREATE UNIQUE INDEX "UQ_users_email" ON "users" ("email")`);
-    await q.query(`CREATE UNIQUE INDEX "UQ_users_tag_name" ON "users" ("tag_name")`);
+    await q.query(
+      `CREATE UNIQUE INDEX "UQ_users_tag_name" ON "users" ("tag_name")`,
+    );
   }
 
   async down(q: QueryRunner): Promise<void> {

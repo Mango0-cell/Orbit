@@ -1,4 +1,9 @@
-import { AbilityBuilder, createMongoAbility, type ForcedSubject, type MongoAbility } from '@casl/ability';
+import {
+  AbilityBuilder,
+  createMongoAbility,
+  type ForcedSubject,
+  type MongoAbility,
+} from '@casl/ability';
 import { permittedFieldsOf } from '@casl/ability/extra';
 import type {
   AccountSettingsSubject,
@@ -18,7 +23,8 @@ export type Actions =
   | 'follow'
   | 'manage';
 
-export type SubjectName = 'Profile' | 'Post' | 'DirectMessage' | 'AccountSettings';
+export type SubjectName =
+  'Profile' | 'Post' | 'DirectMessage' | 'AccountSettings';
 
 /** Subjects may be referenced by name (in rules) or as a tagged object (in checks). */
 type AppSubjects =
@@ -35,13 +41,29 @@ export type AppAbility = MongoAbility<[Actions, AppSubjects]>;
  * `bio` is public-level information: it is shown on every profile, including
  * private accounts, to strangers and guests.
  */
-export const CARD_FIELDS = ['username', 'displayName', 'avatarUrl', 'accountType', 'bio'] as const;
+export const CARD_FIELDS = [
+  'username',
+  'displayName',
+  'avatarUrl',
+  'accountType',
+  'bio',
+] as const;
 
 /** Full-profile fields gated behind public-account / owner / friend access. */
-export const FULL_PROFILE_FIELDS = ['job', 'location', 'websiteUrl', 'genre', 'age', 'createdAt'] as const;
+export const FULL_PROFILE_FIELDS = [
+  'job',
+  'location',
+  'websiteUrl',
+  'genre',
+  'age',
+  'createdAt',
+] as const;
 
 /** Every Profile field the policy can grant read on (card + gated full-profile fields). */
-export const PROFILE_READ_FIELDS = [...CARD_FIELDS, ...FULL_PROFILE_FIELDS] as const;
+export const PROFILE_READ_FIELDS = [
+  ...CARD_FIELDS,
+  ...FULL_PROFILE_FIELDS,
+] as const;
 
 /**
  * The Profile fields a viewer may read, per the field-level CASL policy. Rules that name
@@ -50,7 +72,10 @@ export const PROFILE_READ_FIELDS = [...CARD_FIELDS, ...FULL_PROFILE_FIELDS] as c
  * when a gated {@link FULL_PROFILE_FIELDS} entry (e.g. `location`) is permitted, otherwise
  * the minimal card (which now includes `bio`).
  */
-export function readableProfileFields(ability: AppAbility, profileSubject: ProfileSubject): string[] {
+export function readableProfileFields(
+  ability: AppAbility,
+  profileSubject: ProfileSubject,
+): string[] {
   // `profileSubject` must be tagged via asProfile() so CASL resolves it as 'Profile' at runtime.
   return permittedFieldsOf(ability, 'read', profileSubject as never, {
     fieldsFrom: (rule) => rule.fields ?? [...PROFILE_READ_FIELDS],
@@ -70,7 +95,9 @@ export function isGuest(viewer: Viewer): viewer is null {
  * by default. Reusable in NestJS guards and, later, the frontend.
  */
 export function defineAbilitiesFor(viewer: Viewer): AppAbility {
-  const { can: rawCan, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
+  const { can: rawCan, build } = new AbilityBuilder<AppAbility>(
+    createMongoAbility,
+  );
 
   // CASL's typed builder can't express our attribute/nested conditions on string-named
   // subjects, so we widen the signature. Correctness is guaranteed by the test matrix
@@ -83,7 +110,7 @@ export function defineAbilitiesFor(viewer: Viewer): AppAbility {
   ) => void;
 
   // ---- Reads available to EVERYONE, including unauthenticated guests ----
-  can('read', 'Profile', [...CARD_FIELDS]);          // minimal card (incl. bio) of any account
+  can('read', 'Profile', [...CARD_FIELDS]); // minimal card (incl. bio) of any account
   can('read', 'Profile', { accountType: 'public' }); // full public profile (all fields)
   can('read', 'Post', { ownerAccountType: 'public' }); // public posts
 

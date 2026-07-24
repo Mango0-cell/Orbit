@@ -9,6 +9,7 @@
 **Tech Stack:** NestJS 11, TypeORM + pg, bcrypt, jsonwebtoken, class-validator, `@orbit/shared-auth` (CASL), `@orbit/nest-common` (guards/pipes/filters), `@orbit/message-broker`.
 
 ## Global Constraints
+
 - **Database per service:** `users-service` touches only `db_users`. No cross-DB access.
 - **English only.** Strict TypeScript. Run everything through Nx (`npx nx ...`).
 - **Password** is a bcrypt hash, never returned in any DTO. `email` returned only from `/me`.
@@ -22,16 +23,19 @@
 ### Task 1: Shared output + event contracts
 
 **Files:**
+
 - Create: `libs/shared-types/src/lib/users.ts`
 - Create: `libs/shared-types/src/lib/events.ts`
 - Modify: `libs/shared-types/src/index.ts`
 
 **Interfaces:**
+
 - Produces: `UserCard`, `UserProfile`, `OwnProfile`, `AuthResponse`, `UserCreatedEvent`, `UserProfileUpdatedEvent`, and event-name constants `USER_EVENTS`.
 
 - [ ] **Step 1: Write the contracts**
 
 `libs/shared-types/src/lib/users.ts`:
+
 ```ts
 import type { AccountType, PrivateSettings } from '@orbit/shared-auth';
 
@@ -68,6 +72,7 @@ export interface AuthResponse {
 ```
 
 `libs/shared-types/src/lib/events.ts`:
+
 ```ts
 import type { AccountType } from '@orbit/shared-auth';
 
@@ -91,6 +96,7 @@ export interface UserProfileUpdatedEvent {
 ```
 
 Add to `libs/shared-types/src/index.ts`:
+
 ```ts
 export * from './lib/users.js';
 export * from './lib/events.js';
@@ -99,9 +105,11 @@ export * from './lib/events.js';
 - [ ] **Step 2: Add the `@orbit/shared-auth` dependency to shared-types**
 
 Edit `libs/shared-types/package.json` dependencies, add `"@orbit/shared-auth": "*"`, then:
+
 ```bash
 npx nx sync
 ```
+
 Expected: references updated; "workspace is up to date" on re-run.
 
 - [ ] **Step 3: Typecheck (the gate for a types-only lib)**
@@ -121,10 +129,12 @@ git commit -m "feat(shared-types): user & identity output and event contracts"
 ### Task 2: `signJwt` in `@orbit/nest-common`
 
 **Files:**
+
 - Modify: `libs/nest-common/src/lib/auth/jwt.ts`
 - Modify: `libs/nest-common/src/lib/auth/auth.spec.ts`
 
 **Interfaces:**
+
 - Produces: `signJwt(user: AuthUser, secret: string, expiresIn?: string | number): string`.
 
 - [ ] **Step 1: Write the failing test** in `auth.spec.ts` (add to the `verifyJwt` describe area)
@@ -135,7 +145,10 @@ import { signJwt } from './jwt';
 describe('signJwt', () => {
   it('round-trips through verifyJwt', () => {
     const token = signJwt({ id: 'u1', accountType: 'private' }, 'test-secret');
-    expect(verifyJwt(token, 'test-secret')).toEqual({ id: 'u1', accountType: 'private' });
+    expect(verifyJwt(token, 'test-secret')).toEqual({
+      id: 'u1',
+      accountType: 'private',
+    });
   });
 });
 ```
@@ -159,6 +172,7 @@ export function signJwt(
   return sign(payload, secret, { expiresIn });
 }
 ```
+
 (Change the existing `import { verify }` line to `import { sign, verify }`.)
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -178,6 +192,7 @@ git commit -m "feat(nest-common): add signJwt (symmetric with verifyJwt)"
 ### Task 3: TypeORM + `USERS` entity + migration
 
 **Files:**
+
 - Modify: `apps/users-service/package.json` (deps), root `package.json` (typeorm/pg)
 - Create: `apps/users-service/src/app/database/database.module.ts`
 - Create: `apps/users-service/src/app/users/user.entity.ts`
@@ -186,6 +201,7 @@ git commit -m "feat(nest-common): add signJwt (symmetric with verifyJwt)"
 - Modify: `apps/users-service/src/app/app.module.ts`
 
 **Interfaces:**
+
 - Produces: `UserEntity` (TypeORM), `DatabaseModule`, a `USER_REPOSITORY` via `TypeOrmModule.forFeature([UserEntity])`.
 
 - [ ] **Step 1: Install deps**
@@ -199,7 +215,14 @@ npm install -D @types/bcrypt -w @orbit/users-service
 - [ ] **Step 2: Write the entity** `apps/users-service/src/app/users/user.entity.ts`
 
 ```ts
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import type { AccountType, PrivateSettings } from '@orbit/shared-auth';
 import { defaultPrivateSettings } from '@orbit/shared-auth';
 
@@ -223,7 +246,9 @@ export class UserEntity {
   @UpdateDateColumn({ type: 'timestamptz' }) updated_at!: Date;
 
   static newSettings(accountType: AccountType): PrivateSettings {
-    return accountType === 'private' ? defaultPrivateSettings() : defaultPrivateSettings();
+    return accountType === 'private'
+      ? defaultPrivateSettings()
+      : defaultPrivateSettings();
   }
 }
 ```
@@ -239,7 +264,9 @@ import { UserEntity } from '../users/user.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL ?? 'postgres://orbit:orbit@localhost:5432/db_users',
+      url:
+        process.env.DATABASE_URL ??
+        'postgres://orbit:orbit@localhost:5432/db_users',
       entities: [UserEntity],
       migrationsRun: false,
       synchronize: false,
@@ -250,6 +277,7 @@ import { UserEntity } from '../users/user.entity';
 })
 export class DatabaseModule {}
 ```
+
 Add `DatabaseModule` to `AppModule` imports (alongside `OrbitCommonModule.forRoot()`).
 
 - [ ] **Step 4: Data source + migration** `apps/users-service/src/data-source.ts`
@@ -260,12 +288,16 @@ import { UserEntity } from './app/users/user.entity';
 
 export default new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL ?? 'postgres://orbit:orbit@localhost:5432/db_users',
+  url:
+    process.env.DATABASE_URL ??
+    'postgres://orbit:orbit@localhost:5432/db_users',
   entities: [UserEntity],
   migrations: ['apps/users-service/src/migrations/*.ts'],
 });
 ```
+
 Generate the migration (Postgres must be up: `docker compose up -d postgres`):
+
 ```bash
 npx typeorm migration:generate apps/users-service/src/migrations/CreateUsers -d apps/users-service/src/data-source.ts
 ```
@@ -276,6 +308,7 @@ npx typeorm migration:generate apps/users-service/src/migrations/CreateUsers -d 
 npx typeorm migration:run -d apps/users-service/src/data-source.ts
 docker compose exec postgres psql -U orbit -d db_users -c '\d users'
 ```
+
 Expected: `users` table with the columns above; unique indexes on `email`, `tag_name`.
 
 - [ ] **Step 6: Typecheck + commit**
@@ -291,10 +324,12 @@ git commit -m "feat(users-service): TypeORM USERS entity, db_users wiring, migra
 ### Task 4: Password hashing + credential helpers
 
 **Files:**
+
 - Create: `apps/users-service/src/app/users/password.service.ts`
 - Create: `apps/users-service/src/app/users/password.service.spec.ts`
 
 **Interfaces:**
+
 - Produces: `PasswordService.hash(plain): Promise<string>`, `PasswordService.compare(plain, hash): Promise<boolean>`.
 
 - [ ] **Step 1: Write the failing test** `password.service.spec.ts`
@@ -343,6 +378,7 @@ export class PasswordService {
 - [ ] **Step 4: Run + commit**
 
 Run: `npx nx test @orbit/users-service --skip-nx-cache` → PASS.
+
 ```bash
 git add apps/users-service/src/app/users/password.service.ts apps/users-service/src/app/users/password.service.spec.ts
 git commit -m "feat(users-service): bcrypt PasswordService"
@@ -353,18 +389,21 @@ git commit -m "feat(users-service): bcrypt PasswordService"
 ### Task 5: Users repository/service + DTOs + serializer
 
 **Files:**
+
 - Create: `apps/users-service/src/app/users/dto/register.dto.ts`, `login.dto.ts`, `update-profile.dto.ts`
 - Create: `apps/users-service/src/app/users/user.serializer.ts`
 - Create: `apps/users-service/src/app/users/users.service.ts`
 - Create: `apps/users-service/src/app/users/users.service.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `UserEntity`, `PasswordService`, `UserCard`/`UserProfile`/`OwnProfile` (shared-types).
 - Produces: `UsersService.register`, `.validateCredentials`, `.findByIdOrTag`, `.updateOwn`; `toOwnProfile`, `toProfileSubject`, `serializeProfileFor`.
 
 - [ ] **Step 1: DTOs** (class-validator)
 
 `register.dto.ts`:
+
 ```ts
 import { IsEmail, IsIn, IsString, Matches, MinLength } from 'class-validator';
 export class RegisterDto {
@@ -375,7 +414,9 @@ export class RegisterDto {
   @IsIn(['public', 'private']) accountType!: 'public' | 'private';
 }
 ```
+
 `login.dto.ts`:
+
 ```ts
 import { IsEmail, IsString } from 'class-validator';
 export class LoginDto {
@@ -383,7 +424,9 @@ export class LoginDto {
   @IsString() password!: string;
 }
 ```
+
 `update-profile.dto.ts`:
+
 ```ts
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 export class UpdateProfileDto {
@@ -403,7 +446,11 @@ export class UpdateProfileDto {
 
 ```ts
 import { permittedFieldsOf } from '@casl/ability/extra';
-import { asProfile, type AppAbility, type Relationship } from '@orbit/shared-auth';
+import {
+  asProfile,
+  type AppAbility,
+  type Relationship,
+} from '@orbit/shared-auth';
 import type { OwnProfile, UserCard, UserProfile } from '@orbit/shared-types';
 import { UserEntity } from './user.entity';
 
@@ -412,34 +459,54 @@ export function toOwnProfile(u: UserEntity): OwnProfile {
 }
 function toProfile(u: UserEntity): UserProfile {
   return {
-    userId: u.user_id, tagName: u.tag_name, displayName: u.display_name,
-    avatarUrl: u.profile_photo, accountType: u.account_type,
-    bio: u.bio, job: u.job, location: u.location, websiteUrl: u.website_url,
-    genre: u.genre, age: u.age, createdAt: u.created_at.toISOString(),
+    userId: u.user_id,
+    tagName: u.tag_name,
+    displayName: u.display_name,
+    avatarUrl: u.profile_photo,
+    accountType: u.account_type,
+    bio: u.bio,
+    job: u.job,
+    location: u.location,
+    websiteUrl: u.website_url,
+    genre: u.genre,
+    age: u.age,
+    createdAt: u.created_at.toISOString(),
   };
 }
 
 /** Serialize a target user for a viewer, honoring the CASL Profile field-level policy. */
 export function serializeProfileFor(
-  target: UserEntity, viewerId: string | null, ability: AppAbility,
+  target: UserEntity,
+  viewerId: string | null,
+  ability: AppAbility,
 ): UserProfile | UserCard {
-  const relationship: Relationship = viewerId === target.user_id ? 'friend' : 'none';
+  const relationship: Relationship =
+    viewerId === target.user_id ? 'friend' : 'none';
   const subject = asProfile({
-    ownerId: target.user_id, accountType: target.account_type, relationship,
-    username: target.tag_name, displayName: target.display_name,
-    avatarUrl: target.profile_photo ?? undefined, bio: target.bio ?? undefined,
+    ownerId: target.user_id,
+    accountType: target.account_type,
+    relationship,
+    username: target.tag_name,
+    displayName: target.display_name,
+    avatarUrl: target.profile_photo ?? undefined,
+    bio: target.bio ?? undefined,
     settings: target.settings,
   });
   const full = toProfile(target);
   // If the viewer can read a full-profile field (e.g. bio), return the full profile.
-  if (ability.can('read', subject, 'bio') || viewerId === target.user_id) return full;
+  if (ability.can('read', subject, 'bio') || viewerId === target.user_id)
+    return full;
   const card: UserCard = {
-    userId: full.userId, tagName: full.tagName, displayName: full.displayName,
-    avatarUrl: full.avatarUrl, accountType: full.accountType,
+    userId: full.userId,
+    tagName: full.tagName,
+    displayName: full.displayName,
+    avatarUrl: full.avatarUrl,
+    accountType: full.accountType,
   };
   return card;
 }
 ```
+
 > Note: `viewerId === owner` maps to the own-profile rule (full read). `permittedFieldsOf` is available for finer field filtering later; the `can('read', subject, 'bio')` check is the card-vs-full decision here.
 
 - [ ] **Step 3: Write failing service tests** `users.service.spec.ts`
@@ -450,26 +517,54 @@ import { serializeProfileFor } from './user.serializer';
 import { UserEntity } from './user.entity';
 
 function entity(over: Partial<UserEntity> = {}): UserEntity {
-  return Object.assign(new UserEntity(), {
-    user_id: 'o1', email: 'o@x.io', password: 'h', tag_name: 'owner', display_name: 'Owner',
-    bio: 'secret', job: null, location: null, website_url: null, profile_photo: null,
-    genre: null, age: null, account_type: 'public', settings: {}, created_at: new Date(),
-    updated_at: new Date(),
-  }, over);
+  return Object.assign(
+    new UserEntity(),
+    {
+      user_id: 'o1',
+      email: 'o@x.io',
+      password: 'h',
+      tag_name: 'owner',
+      display_name: 'Owner',
+      bio: 'secret',
+      job: null,
+      location: null,
+      website_url: null,
+      profile_photo: null,
+      genre: null,
+      age: null,
+      account_type: 'public',
+      settings: {},
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+    over,
+  );
 }
 
 describe('serializeProfileFor', () => {
   it('returns the full profile for a public account', () => {
-    const out = serializeProfileFor(entity({ account_type: 'public' }), 'v1', defineAbilitiesFor({ id: 'v1', accountType: 'public' }));
+    const out = serializeProfileFor(
+      entity({ account_type: 'public' }),
+      'v1',
+      defineAbilitiesFor({ id: 'v1', accountType: 'public' }),
+    );
     expect((out as { bio?: string }).bio).toBe('secret');
   });
   it('returns only the card for a private account viewed by a stranger', () => {
-    const out = serializeProfileFor(entity({ account_type: 'private' }), 'v1', defineAbilitiesFor({ id: 'v1', accountType: 'public' }));
+    const out = serializeProfileFor(
+      entity({ account_type: 'private' }),
+      'v1',
+      defineAbilitiesFor({ id: 'v1', accountType: 'public' }),
+    );
     expect((out as { bio?: string }).bio).toBeUndefined();
     expect(out.tagName).toBe('owner');
   });
   it('returns the full profile to the owner even if private', () => {
-    const out = serializeProfileFor(entity({ account_type: 'private' }), 'o1', defineAbilitiesFor({ id: 'o1', accountType: 'private' }));
+    const out = serializeProfileFor(
+      entity({ account_type: 'private' }),
+      'o1',
+      defineAbilitiesFor({ id: 'o1', accountType: 'private' }),
+    );
     expect((out as { bio?: string }).bio).toBe('secret');
   });
 });
@@ -478,7 +573,11 @@ describe('serializeProfileFor', () => {
 - [ ] **Step 4: Implement `UsersService`** `users.service.ts`
 
 ```ts
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
@@ -494,18 +593,28 @@ export class UsersService {
   ) {}
 
   async register(dto: RegisterDto): Promise<UserEntity> {
-    if (await this.repo.findOne({ where: [{ email: dto.email }, { tag_name: dto.tagName }] })) {
+    if (
+      await this.repo.findOne({
+        where: [{ email: dto.email }, { tag_name: dto.tagName }],
+      })
+    ) {
       throw new ConflictException('Email or tag already in use');
     }
     const user = this.repo.create({
-      email: dto.email, password: await this.passwords.hash(dto.password),
-      tag_name: dto.tagName, display_name: dto.displayName, account_type: dto.accountType,
+      email: dto.email,
+      password: await this.passwords.hash(dto.password),
+      tag_name: dto.tagName,
+      display_name: dto.displayName,
+      account_type: dto.accountType,
       settings: UserEntity.newSettings(dto.accountType),
     });
     return this.repo.save(user);
   }
 
-  async validateCredentials(email: string, password: string): Promise<UserEntity> {
+  async validateCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserEntity> {
     const user = await this.repo.findOne({ where: { email } });
     if (!user || !(await this.passwords.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
@@ -514,16 +623,28 @@ export class UsersService {
   }
 
   findByIdOrTag(idOrTag: string): Promise<UserEntity | null> {
-    return this.repo.findOne({ where: [{ user_id: idOrTag }, { tag_name: idOrTag }] });
+    return this.repo.findOne({
+      where: [{ user_id: idOrTag }, { tag_name: idOrTag }],
+    });
   }
 
   async updateOwn(userId: string, dto: UpdateProfileDto): Promise<UserEntity> {
     const patch: Partial<UserEntity> = {
-      display_name: dto.displayName, bio: dto.bio, job: dto.job, location: dto.location,
-      website_url: dto.websiteUrl, profile_photo: dto.profilePhoto, genre: dto.genre,
-      age: dto.age, account_type: dto.accountType,
+      display_name: dto.displayName,
+      bio: dto.bio,
+      job: dto.job,
+      location: dto.location,
+      website_url: dto.websiteUrl,
+      profile_photo: dto.profilePhoto,
+      genre: dto.genre,
+      age: dto.age,
+      account_type: dto.accountType,
     };
-    Object.keys(patch).forEach((k) => (patch as Record<string, unknown>)[k] === undefined && delete (patch as Record<string, unknown>)[k]);
+    Object.keys(patch).forEach(
+      (k) =>
+        (patch as Record<string, unknown>)[k] === undefined &&
+        delete (patch as Record<string, unknown>)[k],
+    );
     await this.repo.update({ user_id: userId }, patch);
     return this.repo.findOneOrFail({ where: { user_id: userId } });
   }
@@ -533,6 +654,7 @@ export class UsersService {
 - [ ] **Step 5: Run tests + commit**
 
 Run: `npx nx test @orbit/users-service --skip-nx-cache` → PASS.
+
 ```bash
 git add apps/users-service/src/app/users
 git commit -m "feat(users-service): users service, DTOs, and policy-aware serializer"
@@ -543,6 +665,7 @@ git commit -m "feat(users-service): users service, DTOs, and policy-aware serial
 ### Task 6: Auth + Profile controllers (guards + policy applied)
 
 **Files:**
+
 - Create: `apps/users-service/src/app/users/auth.controller.ts`
 - Create: `apps/users-service/src/app/users/users.controller.ts`
 - Create: `apps/users-service/src/app/users/users.module.ts`
@@ -550,6 +673,7 @@ git commit -m "feat(users-service): users service, DTOs, and policy-aware serial
 - Modify: `apps/users-service/src/app/app.module.ts` (import `UsersModule`; drop the sample `AppController/AppService`)
 
 **Interfaces:**
+
 - Consumes: `UsersService`, `signJwt`, `@Public`/`@Authenticated`/`@CurrentUser`/`@CurrentAbility` (nest-common), `toOwnProfile`/`serializeProfileFor`.
 - Produces: routes from the endpoints table.
 
@@ -571,20 +695,25 @@ export class AuthController {
     @Inject(JWT_SECRET_TOKEN) private readonly secret: string,
   ) {}
 
-  @Public() @Post('register')
+  @Public()
+  @Post('register')
   async register(@Body() dto: RegisterDto): Promise<AuthResponse> {
     const user = await this.users.register(dto);
     return this.authResponse(user);
   }
 
-  @Public() @Post('login')
+  @Public()
+  @Post('login')
   async login(@Body() dto: LoginDto): Promise<AuthResponse> {
     const user = await this.users.validateCredentials(dto.email, dto.password);
     return this.authResponse(user);
   }
 
   private authResponse(user: import('./user.entity').UserEntity): AuthResponse {
-    const accessToken = signJwt({ id: user.user_id, accountType: user.account_type }, this.secret);
+    const accessToken = signJwt(
+      { id: user.user_id, accountType: user.account_type },
+      this.secret,
+    );
     return { accessToken, user: toOwnProfile(user) };
   }
 }
@@ -593,7 +722,14 @@ export class AuthController {
 - [ ] **Step 2: Users/Profile controller** `users.controller.ts`
 
 ```ts
-import { Body, Controller, Get, NotFoundException, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { Authenticated, CurrentAbility, CurrentUser } from '@orbit/nest-common';
 import type { AppAbility, AuthUser } from '@orbit/shared-auth';
 import type { OwnProfile, UserCard, UserProfile } from '@orbit/shared-types';
@@ -605,15 +741,20 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 
-  @Authenticated() @Get('me')
+  @Authenticated()
+  @Get('me')
   async me(@CurrentUser() user: AuthUser): Promise<OwnProfile> {
     const entity = await this.users.findByIdOrTag(user.id);
     if (!entity) throw new NotFoundException();
     return toOwnProfile(entity);
   }
 
-  @Authenticated() @Patch('me')
-  async updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto): Promise<OwnProfile> {
+  @Authenticated()
+  @Patch('me')
+  async updateMe(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<OwnProfile> {
     return toOwnProfile(await this.users.updateOwn(user.id, dto));
   }
 
@@ -647,6 +788,7 @@ import { PasswordService } from './password.service';
 })
 export class UsersModule {}
 ```
+
 `app.module.ts` → `imports: [OrbitCommonModule.forRoot(), UsersModule]`; remove `AppController`/`AppService` and their files.
 
 - [ ] **Step 4: Controller test (mocked service)** `auth.controller.spec.ts`
@@ -657,21 +799,44 @@ import { UserEntity } from './user.entity';
 
 describe('AuthController', () => {
   const entity = Object.assign(new UserEntity(), {
-    user_id: 'u1', email: 'a@b.io', tag_name: 't', display_name: 'A', account_type: 'public',
-    settings: {}, profile_photo: null, bio: null, job: null, location: null, website_url: null,
-    genre: null, age: null, created_at: new Date(),
+    user_id: 'u1',
+    email: 'a@b.io',
+    tag_name: 't',
+    display_name: 'A',
+    account_type: 'public',
+    settings: {},
+    profile_photo: null,
+    bio: null,
+    job: null,
+    location: null,
+    website_url: null,
+    genre: null,
+    age: null,
+    created_at: new Date(),
   });
-  const users = { register: jest.fn().mockResolvedValue(entity), validateCredentials: jest.fn().mockResolvedValue(entity) };
+  const users = {
+    register: jest.fn().mockResolvedValue(entity),
+    validateCredentials: jest.fn().mockResolvedValue(entity),
+  };
   const ctrl = new AuthController(users as never, 'secret');
 
   it('register returns a token + own profile', async () => {
-    const res = await ctrl.register({ email: 'a@b.io', password: 'password1', tagName: 't', displayName: 'A', accountType: 'public' });
+    const res = await ctrl.register({
+      email: 'a@b.io',
+      password: 'password1',
+      tagName: 't',
+      displayName: 'A',
+      accountType: 'public',
+    });
     expect(res.accessToken).toEqual(expect.any(String));
     expect(res.user.email).toBe('a@b.io');
   });
   it('login delegates to validateCredentials', async () => {
     await ctrl.login({ email: 'a@b.io', password: 'password1' });
-    expect(users.validateCredentials).toHaveBeenCalledWith('a@b.io', 'password1');
+    expect(users.validateCredentials).toHaveBeenCalledWith(
+      'a@b.io',
+      'password1',
+    );
   });
 });
 ```
@@ -679,6 +844,7 @@ describe('AuthController', () => {
 - [ ] **Step 5: Run + commit**
 
 Run: `npx nx run-many -t test typecheck lint -p @orbit/users-service --skip-nx-cache` → PASS.
+
 ```bash
 git add apps/users-service
 git commit -m "feat(users-service): auth + profile controllers with guards and CASL policy"
@@ -689,12 +855,14 @@ git commit -m "feat(users-service): auth + profile controllers with guards and C
 ### Task 7: Publish domain events
 
 **Files:**
+
 - Modify: `libs/message-broker/src/lib/message-broker.ts` (publish helper + exchange constant) and its index
 - Create: `apps/users-service/src/app/events/user-events.publisher.ts`
 - Modify: `apps/users-service/src/app/users/users.service.ts` (publish after commit)
 - Create: `apps/users-service/src/app/events/user-events.publisher.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `USER_EVENTS`, `UserCreatedEvent`, `UserProfileUpdatedEvent` (shared-types).
 - Produces: `UserEventsPublisher.created(user)`, `.profileUpdated(userId, changedFields)`.
 
@@ -707,6 +875,7 @@ export interface DomainEventPublisher {
   publish(routingKey: string, payload: unknown): Promise<void>;
 }
 ```
+
 (Concrete amqp connection is wired in the deployment/broker phase; services depend on this interface. Export it from `libs/message-broker/src/index.ts`.)
 
 - [ ] **Step 2: Failing test** `user-events.publisher.spec.ts`
@@ -719,8 +888,19 @@ describe('UserEventsPublisher', () => {
   const bus = { publish: jest.fn().mockResolvedValue(undefined) };
   const pub = new UserEventsPublisher(bus as never);
   it('publishes user.created with the right payload', async () => {
-    await pub.created({ user_id: 'u1', tag_name: 't', account_type: 'public' } as never);
-    expect(bus.publish).toHaveBeenCalledWith(USER_EVENTS.created, expect.objectContaining({ userId: 'u1', tagName: 't', accountType: 'public' }));
+    await pub.created({
+      user_id: 'u1',
+      tag_name: 't',
+      account_type: 'public',
+    } as never);
+    expect(bus.publish).toHaveBeenCalledWith(
+      USER_EVENTS.created,
+      expect.objectContaining({
+        userId: 'u1',
+        tagName: 't',
+        accountType: 'public',
+      }),
+    );
   });
 });
 ```
@@ -729,7 +909,11 @@ describe('UserEventsPublisher', () => {
 
 ```ts
 import { Inject, Injectable } from '@nestjs/common';
-import { USER_EVENTS, type UserCreatedEvent, type UserProfileUpdatedEvent } from '@orbit/shared-types';
+import {
+  USER_EVENTS,
+  type UserCreatedEvent,
+  type UserProfileUpdatedEvent,
+} from '@orbit/shared-types';
 import { type DomainEventPublisher } from '@orbit/message-broker';
 import type { UserEntity } from '../users/user.entity';
 
@@ -739,20 +923,31 @@ export const EVENT_BUS = Symbol('ORBIT_EVENT_BUS');
 export class UserEventsPublisher {
   constructor(@Inject(EVENT_BUS) private readonly bus: DomainEventPublisher) {}
   created(u: UserEntity): Promise<void> {
-    const e: UserCreatedEvent = { userId: u.user_id, tagName: u.tag_name, accountType: u.account_type, at: new Date().toISOString() };
+    const e: UserCreatedEvent = {
+      userId: u.user_id,
+      tagName: u.tag_name,
+      accountType: u.account_type,
+      at: new Date().toISOString(),
+    };
     return this.bus.publish(USER_EVENTS.created, e);
   }
   profileUpdated(userId: string, changedFields: string[]): Promise<void> {
-    const e: UserProfileUpdatedEvent = { userId, changedFields, at: new Date().toISOString() };
+    const e: UserProfileUpdatedEvent = {
+      userId,
+      changedFields,
+      at: new Date().toISOString(),
+    };
     return this.bus.publish(USER_EVENTS.profileUpdated, e);
   }
 }
 ```
+
 Provide a no-op `EVENT_BUS` in `UsersModule` for now (`{ provide: EVENT_BUS, useValue: { publish: async () => undefined } }`) and inject `UserEventsPublisher` into `UsersService`; call `created`/`profileUpdated` after `save`/`update`. The real amqp bus lands in the broker phase.
 
 - [ ] **Step 4: Run + commit**
 
 Run: `npx nx run-many -t test typecheck lint -p @orbit/users-service @orbit/message-broker --skip-nx-cache` → PASS.
+
 ```bash
 git add libs/message-broker apps/users-service
 git commit -m "feat(users-service): publish user.created / user.profile.updated events"
@@ -776,6 +971,7 @@ JWT_SECRET=dev-secret npx nx serve users-service
 curl -s localhost:3001/api/auth/register -H 'content-type: application/json' \
   -d '{"email":"a@b.io","password":"password1","tagName":"alice","displayName":"Alice","accountType":"private"}'
 ```
+
 Expected: `{ "data": { "accessToken": "...", "user": { ... } }, "meta": { ... } }` (envelope from the interceptor).
 
 - [ ] **Step 3: Done** — hand off to the human to push.
@@ -783,6 +979,7 @@ Expected: `{ "data": { "accessToken": "...", "user": { ... } }, "meta": { ... } 
 ---
 
 ## Self-review notes
+
 - **Spec coverage:** register/login/me/update/get-by-id → Tasks 5-6; entity+migration → Task 3; hashing → Task 4; JWT issuance → Task 2; policy field-level serialization → Task 5; events → Task 7. ✓
 - **Types consistent:** `AuthResponse`/`OwnProfile`/`UserCard`/`UserProfile` used identically across serializer, controllers, and contracts; `signJwt(AuthUser,...)` matches nest-common. ✓
 - **Out of scope respected:** no follow/relationship (fixed `none`/owner), no gRPC, no frontend. ✓

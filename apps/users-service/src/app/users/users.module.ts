@@ -4,7 +4,10 @@ import { AuthController } from './auth.controller';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { PasswordService } from './password.service';
-import { EVENT_BUS, UserEventsPublisher } from '../events/user-events.publisher';
+import {
+  EVENT_BUS,
+  UserEventsPublisher,
+} from '../events/user-events.publisher';
 
 @Module({
   imports: [DatabaseModule],

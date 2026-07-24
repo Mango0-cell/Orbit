@@ -7,10 +7,18 @@ describe('UserEventsPublisher', () => {
   const pub = new UserEventsPublisher(bus as never);
 
   it('publishes user.created with the right payload', async () => {
-    await pub.created({ user_id: 'u1', tag_name: 't', account_type: 'public' } as never);
+    await pub.created({
+      user_id: 'u1',
+      tag_name: 't',
+      account_type: 'public',
+    } as never);
     expect(bus.publish).toHaveBeenCalledWith(
       USER_EVENTS.created,
-      expect.objectContaining({ userId: 'u1', tagName: 't', accountType: 'public' }),
+      expect.objectContaining({
+        userId: 'u1',
+        tagName: 't',
+        accountType: 'public',
+      }),
     );
   });
 
@@ -18,7 +26,10 @@ describe('UserEventsPublisher', () => {
     await pub.profileUpdated('u1', ['bio', 'display_name']);
     expect(bus.publish).toHaveBeenCalledWith(
       USER_EVENTS.profileUpdated,
-      expect.objectContaining({ userId: 'u1', changedFields: ['bio', 'display_name'] }),
+      expect.objectContaining({
+        userId: 'u1',
+        changedFields: ['bio', 'display_name'],
+      }),
     );
   });
 });

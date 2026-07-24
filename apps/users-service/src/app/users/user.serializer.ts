@@ -1,4 +1,9 @@
-import { asProfile, readableProfileFields, FULL_PROFILE_FIELDS, type AppAbility } from '@orbit/shared-auth';
+import {
+  asProfile,
+  readableProfileFields,
+  FULL_PROFILE_FIELDS,
+  type AppAbility,
+} from '@orbit/shared-auth';
 import type { OwnProfile, UserCard, UserProfile } from '@orbit/shared-types';
 import { UserEntity } from './user.entity';
 
@@ -62,7 +67,8 @@ export function serializeProfileFor(
   // `bio` is card-level and therefore always present, even on the card.
   const permitted = readableProfileFields(ability, subject);
   const canSeeFull =
-    viewerId === target.user_id || FULL_PROFILE_FIELDS.some((f) => permitted.includes(f));
+    viewerId === target.user_id ||
+    FULL_PROFILE_FIELDS.some((f) => permitted.includes(f));
   if (canSeeFull) {
     return full;
   }
