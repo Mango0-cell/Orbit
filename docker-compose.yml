@@ -40,7 +40,7 @@ services:
       RABBITMQ_DEFAULT_USER: orbit
       RABBITMQ_DEFAULT_PASS: orbit
     ports:
-      - '5672:5672'   # AMQP
+      - '5672:5672' # AMQP
       - '15672:15672' # management UI → http://localhost:15672 (orbit / orbit)
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
@@ -62,7 +62,7 @@ services:
       RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     ports:
-      - '3001:3001'   # REST
+      - '3001:3001' # REST
       - '50051:50051' # gRPC
     depends_on:
       postgres:
@@ -84,7 +84,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       USERS_GRPC_URL: users-service:50051 # sync backend-to-backend call (profile visibility, etc.)
     ports:
-      - '3002:3002'   # REST
+      - '3002:3002' # REST
       - '50052:50052' # gRPC
     depends_on:
       postgres:
@@ -108,7 +108,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       USERS_GRPC_URL: users-service:50051
     ports:
-      - '3003:3003'   # WebSocket + REST
+      - '3003:3003' # WebSocket + REST
       - '50053:50053' # gRPC
     depends_on:
       postgres:
@@ -129,7 +129,7 @@ services:
       RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672 # primarily an event consumer
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     ports:
-      - '3004:3004'   # REST + WebSocket (push)
+      - '3004:3004' # REST + WebSocket (push)
       - '50054:50054' # gRPC
     depends_on:
       postgres:
