@@ -60,6 +60,7 @@ services:
       GRPC_URL: 0.0.0.0:50051
       DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_users
       RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     ports:
       - '3001:3001'   # REST
       - '50051:50051' # gRPC
@@ -80,6 +81,7 @@ services:
       GRPC_URL: 0.0.0.0:50052
       DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_content
       RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       USERS_GRPC_URL: users-service:50051 # sync backend-to-backend call (profile visibility, etc.)
     ports:
       - '3002:3002'   # REST
@@ -103,6 +105,7 @@ services:
       GRPC_URL: 0.0.0.0:50053
       DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_chat
       RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       USERS_GRPC_URL: users-service:50051
     ports:
       - '3003:3003'   # WebSocket + REST
@@ -124,6 +127,7 @@ services:
       GRPC_URL: 0.0.0.0:50054
       DATABASE_URL: postgres://orbit:orbit@postgres:5432/db_notifications
       RABBITMQ_URL: amqp://orbit:orbit@rabbitmq:5672 # primarily an event consumer
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
     ports:
       - '3004:3004'   # REST + WebSocket (push)
       - '50054:50054' # gRPC

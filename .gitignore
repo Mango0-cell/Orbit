@@ -60,3 +60,8 @@ test-output
 
 # TypeScript incremental build info (generated)
 *.tsbuildinfo
+
+# Local environment — never commit real secrets (JWT_SECRET, DB creds, etc.)
+.env
+.env.*
+!.env.example
