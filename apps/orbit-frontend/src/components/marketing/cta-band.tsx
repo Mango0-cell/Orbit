@@ -1,25 +1,47 @@
-import Link from 'next/link';
 import { MdGroupAdd } from 'react-icons/md';
-import { Reveal } from '@/components/motion/reveal';
 
 export function CtaBand() {
   return (
-    <section id="community" className="px-6 py-24">
-      <Reveal className="mx-auto flex max-w-3xl flex-col items-center gap-6 rounded-card border border-primary/15 bg-surface-elevated/40 px-8 py-16 text-center backdrop-blur-xl">
-        <h2 className="font-display text-4xl font-bold text-on-surface">
+    <section
+      id="community"
+      className="relative border-t border-primary/10 px-4 py-32 md:px-12"
+    >
+      <div
+        className="absolute inset-0"
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(ellipse at center, color-mix(in oklab, var(--color-primary-container) 10%, transparent), var(--color-background) 70%)',
+        }}
+      />
+      <div className="glass-panel thermal-glow relative z-10 mx-auto max-w-2xl rounded-2xl p-12 text-center">
+        <MdGroupAdd
+          className="mx-auto mb-6 block text-5xl text-secondary"
+          aria-hidden
+        />
+        <h2 className="mb-4 text-headline-lg text-on-surface">
           Join the Constellation
         </h2>
-        <p className="max-w-xl font-body text-on-surface-muted">
+        <p className="mb-8 text-body-md text-on-surface-variant">
           Establish your node in the network. Enter your transmission
           coordinates to receive early access protocols.
         </p>
-        <Link
-          href="/signup"
-          className="inline-flex items-center gap-2 rounded-control bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110"
-        >
-          <MdGroupAdd className="h-4 w-4" /> Establish Link
-        </Link>
-      </Reveal>
+        <form className="mx-auto flex max-w-md flex-col gap-4 sm:flex-row">
+          <input
+            type="email"
+            required
+            aria-label="Email"
+            placeholder="Transmission Coordinates (Email)"
+            className="w-full flex-grow rounded-md border border-outline-variant bg-surface-dim px-4 py-3 text-body-md text-on-surface transition-colors placeholder:text-on-surface-variant/50 focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary"
+          />
+          <button
+            type="submit"
+            className="whitespace-nowrap rounded-md bg-secondary px-6 py-3 text-label-md text-on-secondary transition-colors hover:bg-secondary-fixed"
+          >
+            Establish Link
+          </button>
+        </form>
+      </div>
     </section>
   );
 }

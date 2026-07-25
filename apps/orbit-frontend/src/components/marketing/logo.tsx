@@ -1,12 +1,12 @@
 import { cn } from '@/lib/utils/cn';
 
-/** Orbit wordmark with a small orbital mark. */
+/** Orbit wordmark with a small orbital mark (both nav & footer render it in primary). */
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn('inline-flex items-center gap-2', className)}>
+    <span className={cn('inline-flex items-center gap-3', className)}>
       <svg
         viewBox="0 0 24 24"
-        className="h-6 w-6 text-primary"
+        className="h-8 w-8 text-primary"
         fill="none"
         aria-hidden
       >
@@ -17,11 +17,11 @@ export function Logo({ className }: { className?: string }) {
           rx="10"
           ry="4"
           stroke="currentColor"
-          strokeOpacity="0.55"
+          strokeOpacity="0.6"
           transform="rotate(-30 12 12)"
         />
       </svg>
-      <span className="font-display text-lg font-bold tracking-tight text-on-surface">
+      <span className="text-headline-md font-bold tracking-tighter text-primary">
         Orbit
       </span>
     </span>

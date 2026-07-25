@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Logo } from './logo';
 
 const FOOTER_LINKS = [
@@ -10,25 +9,22 @@ const FOOTER_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 px-6 py-10">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
-        <Logo />
-        <ul className="flex flex-wrap items-center justify-center gap-6">
-          {FOOTER_LINKS.map((label) => (
-            <li key={label}>
-              <Link
-                href="#"
-                className="font-body text-sm text-on-surface-muted transition hover:text-on-surface"
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <p className="font-mono text-xs text-on-surface-muted">
-          © 2026 Orbit Aerospace. All rights reserved.
-        </p>
+    <footer className="flex w-full flex-col items-center justify-between gap-6 border-t border-primary/10 bg-surface-container-lowest px-4 py-12 md:flex-row md:px-12">
+      <Logo />
+      <div className="flex flex-wrap justify-center gap-6">
+        {FOOTER_LINKS.map((label) => (
+          <a
+            key={label}
+            href="#"
+            className="text-body-md text-on-surface-variant transition-colors hover:text-tertiary"
+          >
+            {label}
+          </a>
+        ))}
       </div>
+      <p className="text-body-md text-on-surface-variant">
+        © 2026 Orbit Aerospace. All rights reserved.
+      </p>
     </footer>
   );
 }

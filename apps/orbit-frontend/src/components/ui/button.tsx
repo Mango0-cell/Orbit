@@ -1,12 +1,14 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils/cn';
 
-type Variant = 'primary' | 'ghost' | 'glass';
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-primary text-primary-foreground hover:brightness-110',
-  ghost: 'bg-transparent text-on-surface hover:bg-surface-elevated',
-  glass: 'glass text-on-surface hover:border-primary/40',
+  primary:
+    'thermal-glow bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container hover:opacity-90',
+  secondary: 'bg-secondary text-on-secondary hover:bg-secondary-fixed',
+  outline: 'border border-primary text-primary hover:bg-primary/10',
+  ghost: 'text-on-surface-variant hover:text-on-surface',
 };
 
 export function Button({
@@ -17,7 +19,7 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-control px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-label-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50',
         VARIANTS[variant],
         className,
       )}

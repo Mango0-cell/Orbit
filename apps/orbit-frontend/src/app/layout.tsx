@@ -1,30 +1,17 @@
 import type { Metadata } from 'next';
-import {
-  Space_Grotesk,
-  Hanken_Grotesk,
-  JetBrains_Mono,
-} from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 import './global.css';
 
-const display = Space_Grotesk({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-space-grotesk',
   display: 'swap',
 });
-const body = Hanken_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-hanken-grotesk',
-  display: 'swap',
-});
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
-  title: 'Orbit',
-  description: 'A social network among the stars.',
+  title: 'Orbit — Command the Void',
+  description:
+    'Harness the power of an intelligent, decentralized network designed to withstand the extremes of deep space communication and stellar discovery.',
 };
 
 export default function RootLayout({
@@ -33,10 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
-    >
+    <html lang="en" className={spaceGrotesk.variable}>
       <body>{children}</body>
     </html>
   );

@@ -4,43 +4,48 @@ import {
   MdKeyboardArrowDown,
   MdRocketLaunch,
 } from 'react-icons/md';
-import { FadeIn } from '@/components/motion/fade-in';
+import { BlackHoleShader } from './black-hole-shader';
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-dvh flex-col items-center justify-center px-6 text-center">
-      <FadeIn className="flex max-w-3xl flex-col items-center gap-6">
-        <span className="rounded-control border border-primary/30 bg-primary/5 px-4 py-1.5 font-mono text-xs uppercase tracking-[0.2em] text-primary">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-24">
+      <div className="absolute inset-0 h-full w-full opacity-60 mix-blend-screen">
+        <BlackHoleShader className="block h-full w-full" />
+      </div>
+      <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 text-center md:px-12">
+        <span className="mb-8 inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 text-label-sm uppercase tracking-widest text-on-secondary">
+          <span className="pulse-anim h-2 w-2 rounded-full bg-on-secondary" />
           First AI-Native Cosmic Network
         </span>
-        {/* SWAP SLOT: React Bits text animation (Split Text / Shiny Text) via orbit-reactbits. */}
-        <h1 className="bg-gradient-to-b from-on-surface to-on-surface-muted bg-clip-text font-display text-6xl font-bold tracking-tight text-transparent md:text-8xl">
-          Command The Void
+        <h1 className="mb-6 text-headline-xl-mobile text-on-surface drop-shadow-2xl md:text-headline-xl">
+          <span className="gradient-text font-bold">Command</span>
+          <br /> The Void
         </h1>
-        <p className="max-w-2xl font-body text-lg text-on-surface-muted">
+        <p className="mx-auto mb-12 max-w-2xl text-body-lg text-on-surface-variant">
           Harness the power of an intelligent, decentralized network designed to
           withstand the extremes of deep space communication and stellar
           discovery.
         </p>
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+        <div className="flex flex-col gap-6 sm:flex-row">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-control bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110"
+            className="thermal-glow thermal-glow-hover flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-container to-secondary-container px-8 py-4 text-label-md font-bold text-on-primary-container transition-all duration-300"
           >
-            <MdRocketLaunch className="h-4 w-4" /> Initiate Sequence
+            Initiate Sequence
+            <MdRocketLaunch className="text-lg" aria-hidden />
           </Link>
           <Link
             href="#features"
-            className="glass inline-flex items-center gap-2 rounded-control px-5 py-3 text-sm font-medium text-on-surface transition hover:border-primary/40"
+            className="flex items-center justify-center gap-2 rounded-full border border-primary px-8 py-4 text-label-md text-primary transition-colors duration-300 hover:bg-primary/10"
           >
-            <MdInsights className="h-4 w-4" /> View Telemetry
+            View Telemetry
+            <MdInsights className="text-lg" aria-hidden />
           </Link>
         </div>
-      </FadeIn>
-      <MdKeyboardArrowDown
-        className="absolute bottom-8 h-6 w-6 animate-bounce text-on-surface-muted"
-        aria-hidden
-      />
+      </div>
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
+        <MdKeyboardArrowDown className="text-3xl text-primary" aria-hidden />
+      </div>
     </section>
   );
 }
