@@ -44,11 +44,10 @@ export interface ProfileSubject {
   relationship: Relationship;
   /** Present for private owners. */
   settings?: PrivateSettings;
-  // Card fields (readable by anyone):
+  // Card fields (readable by anyone, incl. bio):
   username: string;
   displayName: string;
   avatarUrl?: string;
-  // Full-profile fields (gated):
   bio?: string;
 }
 
