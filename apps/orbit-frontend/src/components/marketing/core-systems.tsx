@@ -13,7 +13,7 @@ export function CoreSystems() {
     >
       <div className="mx-auto max-w-[1440px]">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-headline-lg text-on-surface">
+          <h2 className="mb-4 text-4xl font-semibold text-on-surface md:text-5xl">
             Core Systems
           </h2>
           <p className="text-body-md text-on-surface-variant">

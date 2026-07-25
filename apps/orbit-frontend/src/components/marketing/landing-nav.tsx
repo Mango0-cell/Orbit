@@ -27,7 +27,7 @@ export function LandingNav() {
         </Link>
         <Link
           href="/signup"
-          className="thermal-glow rounded-full bg-gradient-to-r from-primary-container to-secondary-container px-6 py-2 text-label-md text-on-primary-container transition-opacity hover:opacity-80"
+          className="thermal-glow rounded-md bg-gradient-to-r from-primary-container to-secondary-container px-6 py-2 text-label-md text-on-primary-container transition-opacity hover:opacity-80"
         >
           Launch Journey
         </Link>

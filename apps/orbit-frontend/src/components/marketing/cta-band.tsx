@@ -19,7 +19,7 @@ export function CtaBand() {
           className="mx-auto mb-6 block text-5xl text-secondary"
           aria-hidden
         />
-        <h2 className="mb-4 text-headline-lg text-on-surface">
+        <h2 className="mb-4 text-4xl font-semibold text-on-surface md:text-6xl">
           Join the Constellation
         </h2>
         <p className="mb-8 text-body-md text-on-surface-variant">

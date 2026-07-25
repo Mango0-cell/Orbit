@@ -2,7 +2,7 @@ export function SupernovaSection() {
   return (
     <section id="about" className="relative px-4 py-32 md:px-12">
       <div className="mx-auto max-w-5xl text-center">
-        <h2 className="mb-8 text-headline-lg text-on-surface">
+        <h2 className="mb-8 text-4xl font-semibold text-on-surface md:text-6xl">
           Forged in the heart of a Supernova.
         </h2>
         <p className="text-body-lg leading-relaxed text-on-surface-variant">
