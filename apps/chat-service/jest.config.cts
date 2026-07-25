@@ -17,5 +17,12 @@ module.exports = {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
+  moduleNameMapper: {
+    // Resolve workspace libs to their TS source; strip their nodenext ".js" import suffixes.
+    '^@orbit/shared-auth$': '<rootDir>/../../libs/shared-auth/src/index.ts',
+    '^@orbit/shared-types$': '<rootDir>/../../libs/shared-types/src/index.ts',
+    '^@orbit/nest-common$': '<rootDir>/../../libs/nest-common/src/index.ts',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   coverageDirectory: 'test-output/jest/coverage',
 };
