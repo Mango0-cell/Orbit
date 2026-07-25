@@ -17,7 +17,13 @@ jobs:
       - uses: actions/checkout@v5
         with:
           filter: tree:0
+          # Full git history so Nx can diff HEAD against the base commit.
           fetch-depth: 0
+
+      # Derives NX_BASE and NX_HEAD dynamically from the event:
+      #   pull_request -> base = merge target (main), head = PR head
+      #   push (main)  -> base = last successful commit, head = current SHA
+      - uses: nrwl/nx-set-shas@v4
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -32,9 +38,9 @@ jobs:
 
       - run: npm ci
 
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e
+      # Only the projects affected by this diff (base..head) run each target.
+      - run: npx nx record -- npx nx format:check --base=$NX_BASE --head=$NX_HEAD
+      - run: npx nx affected -t lint test build typecheck e2e --base=$NX_BASE --head=$NX_HEAD
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()

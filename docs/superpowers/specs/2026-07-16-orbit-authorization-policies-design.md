@@ -1,6 +1,6 @@
 # Orbit Authorization Policies (CASL) — Design
 
-**Date:** 2026-07-16 · **Status:** approved · **Scope:** *policies only* — CASL abilities,
+**Date:** 2026-07-16 · **Status:** approved · **Scope:** _policies only_ — CASL abilities,
 contracts, roles, and permissions in `@orbit/shared-auth`. No NestJS guards, no gRPC, no
 service wiring (those come in the service-build phase).
 
@@ -15,15 +15,15 @@ service wiring (those come in the service-build phase).
 
 ## Permission matrix
 
-| Action on O's content | Guest | Public O | Private O |
-| --- | --- | --- | --- |
-| Minimal card (username, name, avatar, type) | ✅ | ✅ | ✅ |
-| Full profile / info / images | public only | ✅ any | friends only |
-| Read posts | public only | ✅ any | friends only (+ `postsVisibleToFriends`) |
-| React / share a post | ❌ | ✅ any | friends only (+ `allowFriendReactions`) |
-| Comment a post | ❌ | ✅ any | friends only (+ `allowFriendComments`) |
-| Send DM | ❌ | followers/friends | friend → direct · follower → **request** (+ `allowFollowerMessageRequests`) · none → ✕ |
-| Follow O | ❌ | ✅ (open) | ✅ (open follow) |
+| Action on O's content                       | Guest       | Public O          | Private O                                                                              |
+| ------------------------------------------- | ----------- | ----------------- | -------------------------------------------------------------------------------------- |
+| Minimal card (username, name, avatar, type) | ✅          | ✅                | ✅                                                                                     |
+| Full profile / info / images                | public only | ✅ any            | friends only                                                                           |
+| Read posts                                  | public only | ✅ any            | friends only (+ `postsVisibleToFriends`)                                               |
+| React / share a post                        | ❌          | ✅ any            | friends only (+ `allowFriendReactions`)                                                |
+| Comment a post                              | ❌          | ✅ any            | friends only (+ `allowFriendComments`)                                                 |
+| Send DM                                     | ❌          | followers/friends | friend → direct · follower → **request** (+ `allowFollowerMessageRequests`) · none → ✕ |
+| Follow O                                    | ❌          | ✅ (open)         | ✅ (open follow)                                                                       |
 
 Everything not granted is **denied by default**.
 
@@ -43,7 +43,7 @@ Everything not granted is **denied by default**.
 - A viewer's **own** account type never limits what they can **do** to others — private only
   limits what others **see** of them. Users always have full rights over their own resources.
 - **Notifications** (follow, follow-returned, message-request, message, reaction, share,
-  comment) are *events emitted by* these actions — out of scope for the policy layer.
+  comment) are _events emitted by_ these actions — out of scope for the policy layer.
 
 ## CASL design (isomorphic ABAC)
 
@@ -72,10 +72,12 @@ build subjects must uphold:
    and owner `settings` are resolved on the server (relationship via gRPC to users-service) —
    **never** accepted from the client. A spoofed `relationship: 'friend'` would defeat the policy.
 2. **Field-level reads must be honored on serialization.** The minimal card exposes only
-   `username / displayName / avatarUrl / accountType`. When returning a private, non-friend
-   profile, the service must emit **only** those fields (e.g. via CASL `permittedFieldsOf`) —
-   returning the full row would leak `bio`/settings even though `can('read', …, 'bio')` is false.
+   `username / displayName / avatarUrl / accountType / bio` (`bio` is public-level, shown on every
+   profile). When returning a private, non-friend profile, the service must emit **only** the card
+   fields (e.g. via CASL `permittedFieldsOf`) — returning the full row would leak gated fields like
+   `location`/settings even though `can('read', …, 'location')` is false.
 
 ## Out of scope (next phases)
+
 NestJS `JwtAuthGuard` / `PoliciesGuard`, JWT verification, relationship resolution over gRPC,
 notification events, and the account-settings write API.

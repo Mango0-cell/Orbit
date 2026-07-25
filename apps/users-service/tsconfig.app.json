@@ -28,7 +28,16 @@
   ],
   "references": [
     {
+      "path": "../../libs/shared-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/shared-auth/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/nest-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/message-broker/tsconfig.lib.json"
     }
   ]
 }
