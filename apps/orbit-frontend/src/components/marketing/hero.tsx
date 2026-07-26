@@ -18,7 +18,7 @@ export function Hero() {
           text="Command The Void"
           animateBy="words"
           delay={180}
-          className="gradient-text mb-6 justify-center text-6xl font-bold leading-[1.05] tracking-tight drop-shadow-2xl md:text-8xl lg:text-[8.5rem]"
+          className="gradient-text mb-6 justify-center text-5xl font-bold leading-[1.05] tracking-tight drop-shadow-2xl md:text-6xl lg:text-7xl"
         />
         <p className="mx-auto mb-12 max-w-2xl text-body-lg text-on-surface-variant">
           Harness the power of an intelligent, decentralized network designed to
