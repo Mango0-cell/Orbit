@@ -9,7 +9,7 @@ export function CoreSystems() {
   return (
     <section
       id="features"
-      className="bg-surface-container-lowest px-4 py-24 md:px-12"
+      className="relative z-10 bg-surface-container-lowest px-4 py-24 md:px-12"
     >
       <div className="mx-auto max-w-[1440px]">
         <div className="mb-16 text-center">

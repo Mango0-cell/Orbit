@@ -1,10 +1,11 @@
 import { MdGroupAdd } from 'react-icons/md';
+import { StarBorder } from '@/components/motion/star-border';
 
 export function CtaBand() {
   return (
     <section
       id="community"
-      className="relative border-t border-primary/10 px-4 py-32 md:px-12"
+      className="relative z-10 border-t border-primary/10 bg-background px-4 py-32 md:px-12"
     >
       <div
         className="absolute inset-0"
@@ -34,12 +35,9 @@ export function CtaBand() {
             placeholder="Transmission Coordinates (Email)"
             className="w-full flex-grow rounded-md border border-outline-variant bg-surface-dim px-4 py-3 text-body-md text-on-surface transition-colors placeholder:text-on-surface-variant/50 focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary"
           />
-          <button
-            type="submit"
-            className="whitespace-nowrap rounded-md bg-secondary px-6 py-3 text-label-md text-on-secondary transition-colors hover:bg-secondary-fixed"
-          >
+          <StarBorder type="submit" innerClassName="px-6 py-3 text-label-md">
             Establish Link
-          </button>
+          </StarBorder>
         </form>
       </div>
     </section>

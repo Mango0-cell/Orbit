@@ -10,7 +10,7 @@ const STATS: { k: string; v: string; icon: IconType }[] = [
 
 export function Highlights() {
   return (
-    <section className="px-4 py-24 md:px-12">
+    <section className="relative z-10 bg-surface-container-lowest px-4 py-24 md:px-12">
       <div className="mx-auto max-w-[1440px]">
         <div className="mb-14 text-center">
           <span className="text-label-sm uppercase tracking-widest text-secondary">
