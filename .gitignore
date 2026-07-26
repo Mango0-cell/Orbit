@@ -65,3 +65,6 @@ test-output
 .env
 .env.*
 !.env.example
+# Local media / screen recordings (do not commit)
+*.mov
+*.mp4
