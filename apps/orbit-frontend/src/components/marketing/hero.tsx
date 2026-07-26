@@ -10,12 +10,8 @@ export function Hero() {
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-24">
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 text-center md:px-12">
-        <span className="mb-8 inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 text-label-sm uppercase tracking-widest text-on-secondary">
-          <span className="pulse-anim h-2 w-2 rounded-full bg-on-secondary" />
-          First AI-Native Cosmic Network
-        </span>
         <BlurText
-          text="Command The Void"
+          text="Orbit"
           animateBy="words"
           delay={180}
           className="gradient-text mb-6 justify-center text-5xl font-bold leading-[1.05] tracking-tight drop-shadow-2xl md:text-6xl lg:text-7xl"

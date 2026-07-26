@@ -1,4 +1,4 @@
-import { ParticleHero } from '@/components/marketing/particle-hero';
+import { AuroraBackground } from '@/components/marketing/aurora-background';
 import { Starfield } from '@/components/marketing/starfield';
 import { LandingNav } from '@/components/marketing/landing-nav';
 import { Hero } from '@/components/marketing/hero';
@@ -11,7 +11,7 @@ import { SiteFooter } from '@/components/marketing/site-footer';
 export default function LandingPage() {
   return (
     <>
-      <ParticleHero />
+      <AuroraBackground />
       <Starfield />
       <LandingNav />
       <main>
