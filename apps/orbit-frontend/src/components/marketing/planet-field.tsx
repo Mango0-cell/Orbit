@@ -4,29 +4,28 @@ import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { cn } from '@/lib/utils/cn';
 
-/** Warm Supernova particle colors (coral / amber / gold). */
-const COLORS = ['#ffd7a0', '#ffc080', '#ffb4a4', '#e9c400'] as const;
+/** Supernova point colors (coral / amber / gold / bright). */
+const COLORS = ['#ffd7a0', '#ffc080', '#ffb4a4', '#ff8a4c', '#e9c400'] as const;
 
-type Particle = {
+type P3 = { x: number; y: number; z: number; color: string };
+type Emitter = {
   x: number;
   y: number;
+  z: number;
   vx: number;
   vy: number;
-  /** Spawn point on the planet's left limb (anchors the radiating spoke). */
-  ox: number;
-  oy: number;
+  vz: number;
   life: number;
   maxLife: number;
-  size: number;
   color: string;
 };
 
 /**
- * PlanetField — a fiery Supernova sphere anchored off the right edge, emitting
- * particles and connecting lines that radiate from its left limb toward the
- * content on the left. The planet is CSS (layered radial gradients); the
- * particles + constellation lines are drawn on a DPR-scaled 2D canvas with
- * additive blending. Reduced-motion renders a single static frame.
+ * PlanetField — a rotating "planet" built from a sphere of glowing points wired
+ * together by a proximity line-network (a constellation globe), with particles
+ * that stream outward off its surface. Anchored at the right of the hero so the
+ * text sits to its left. Canvas 2D with a projected 3D sphere + additive glow.
+ * Reduced-motion draws a single static frame.
  */
 export function PlanetField({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,131 +42,172 @@ export function PlanetField({ className }: { className?: string }) {
     let height = 0;
     let dpr = 1;
 
-    // Planet geometry in CSS pixels (recomputed on resize) — mirrors the CSS:
-    // size min(60vh, 560px), right: -6rem (96px), vertically centered.
+    // Sphere geometry (screen space, recomputed on resize).
     let cx = 0;
     let cy = 0;
-    let radius = 0;
+    let R = 0;
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-    const computeGeometry = () => {
-      const diameter = Math.min(height * 0.6, 560);
-      radius = diameter / 2;
-      const offRight = 96; // 6rem — the planet sits partly off the right edge
-      cx = width + offRight - radius;
-      cy = height / 2;
-    };
-
-    const spawn = (p: Particle) => {
-      // Left hemisphere of the planet, biased toward the limb facing the content.
-      const theta = Math.PI + rand(-0.95, 0.95);
-      const ox = cx + Math.cos(theta) * radius;
-      const oy = cy + Math.sin(theta) * radius;
-      // Outward (surface-normal) direction + a little tangential spread.
-      const spread = rand(-0.25, 0.25);
-      const dirX = Math.cos(theta) - Math.sin(theta) * spread;
-      const dirY = Math.sin(theta) + Math.cos(theta) * spread;
-      const speed = rand(0.12, 0.42);
-      p.ox = ox;
-      p.oy = oy;
-      p.x = ox;
-      p.y = oy;
-      p.vx = dirX * speed;
-      p.vy = dirY * speed;
-      p.maxLife = rand(340, 640);
-      p.life = 0;
-      p.size = rand(0.9, 2.4);
-      p.color = COLORS[(Math.random() * COLORS.length) | 0];
-    };
-
-    let particles: Particle[] = [];
-
-    const initParticles = () => {
-      const count = width < 640 ? 46 : 90;
-      particles = Array.from({ length: count }, () => {
-        const p = {} as Particle;
-        spawn(p);
-        // Stagger initial age so a single (static) frame already looks alive.
-        p.life = rand(0, p.maxLife);
-        p.x = p.ox + p.vx * p.life;
-        p.y = p.oy + p.vy * p.life;
-        return p;
+    // ── Build the sphere: evenly-spread points via a Fibonacci lattice. ──
+    const N = 260;
+    const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+    const nodes: P3[] = [];
+    for (let i = 0; i < N; i++) {
+      const y = 1 - (i / (N - 1)) * 2; // 1 → -1
+      const r = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = i * GOLDEN;
+      nodes.push({
+        x: Math.cos(theta) * r,
+        y,
+        z: Math.sin(theta) * r,
+        color: COLORS[(Math.random() * COLORS.length) | 0],
       });
+    }
+
+    // Rotation is rigid, so proximity pairs are constant — precompute once.
+    const LINK = 0.46; // unit-sphere chord distance threshold
+    const pairs: [number, number][] = [];
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dz = nodes[i].z - nodes[j].z;
+        if (dx * dx + dy * dy + dz * dz < LINK * LINK) pairs.push([i, j]);
+      }
+    }
+
+    // Particles streaming off the surface.
+    const emitters: Emitter[] = [];
+    const spawnEmitter = (e: Emitter) => {
+      const n = nodes[(Math.random() * N) | 0];
+      e.x = n.x;
+      e.y = n.y;
+      e.z = n.z;
+      const s = rand(0.004, 0.011);
+      e.vx = n.x * s;
+      e.vy = n.y * s;
+      e.vz = n.z * s;
+      e.maxLife = rand(70, 150);
+      e.life = 0;
+      e.color = n.color;
+    };
+    for (let i = 0; i < 40; i++) {
+      const e = {} as Emitter;
+      spawnEmitter(e);
+      e.life = rand(0, e.maxLife);
+      emitters.push(e);
+    }
+
+    // Rotation state.
+    const TILT = -0.42; // fixed lean on X
+    let angle = 0;
+    const cosT = Math.cos(TILT);
+    const sinT = Math.sin(TILT);
+
+    // Rotate a unit point by current Y-angle then fixed X-tilt.
+    const rotate = (x: number, y: number, z: number, ca: number, sa: number) => {
+      const rx = x * ca + z * sa;
+      const rz = -x * sa + z * ca;
+      const ry = y * cosT - rz * sinT;
+      const rz2 = y * sinT + rz * cosT;
+      return { x: rx, y: ry, z: rz2 };
     };
 
-    const alphaFor = (p: Particle) => {
-      const t = p.life / p.maxLife;
-      const fadeIn = Math.min(1, t / 0.12);
-      const fadeOut = Math.min(1, (1 - t) / 0.45);
-      return Math.max(0, Math.min(fadeIn, fadeOut));
+    // Perspective projection → screen. Returns [sx, sy, depth 0..1 (1=near)].
+    const FOV = 2.6;
+    const project = (x: number, y: number, z: number) => {
+      const persp = FOV / (FOV - z);
+      return {
+        sx: cx + x * R * persp,
+        sy: cy + y * R * persp,
+        depth: (z + 1) / 2,
+        persp,
+      };
     };
-
-    const SPOKE = 150; // radiating line length from the limb
-    const LINK = 110; // constellation link distance
 
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'lighter';
-      ctx.lineWidth = 1;
+      const ca = Math.cos(angle);
+      const sa = Math.sin(angle);
 
-      // Radiating spokes: each young particle stays tethered to its limb origin,
-      // so the network visibly originates at the planet surface.
-      for (const p of particles) {
-        const dist = Math.hypot(p.x - p.ox, p.y - p.oy);
-        if (dist >= SPOKE) continue;
-        const a = (1 - dist / SPOKE) * alphaFor(p) * 0.5;
-        if (a <= 0.01) continue;
-        ctx.strokeStyle = `rgba(255,150,90,${a})`;
+      // Soft planet core glow behind the network.
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.15);
+      core.addColorStop(0, 'rgba(255,120,60,0.16)');
+      core.addColorStop(0.5, 'rgba(255,86,51,0.07)');
+      core.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Project all nodes once.
+      const proj = nodes.map((n) => {
+        const r = rotate(n.x, n.y, n.z, ca, sa);
+        return { ...project(r.x, r.y, r.z), z: r.z };
+      });
+
+      // Network lines (depth-faded).
+      ctx.lineWidth = 1;
+      for (const [i, j] of pairs) {
+        const a = proj[i];
+        const b = proj[j];
+        const d = (a.depth + b.depth) / 2;
+        const alpha = d * d * 0.5;
+        if (alpha < 0.02) continue;
+        ctx.strokeStyle = `rgba(255,150,90,${alpha})`;
         ctx.beginPath();
-        ctx.moveTo(p.ox, p.oy);
-        ctx.lineTo(p.x, p.y);
+        ctx.moveTo(a.sx, a.sy);
+        ctx.lineTo(b.sx, b.sy);
         ctx.stroke();
       }
 
-      // Constellation lines between nearby particles.
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-        for (let j = i + 1; j < particles.length; j++) {
-          const b = particles[j];
-          const dist = Math.hypot(a.x - b.x, a.y - b.y);
-          if (dist >= LINK) continue;
-          const alpha =
-            (1 - dist / LINK) * Math.min(alphaFor(a), alphaFor(b)) * 0.5;
-          if (alpha <= 0.01) continue;
-          ctx.strokeStyle = `rgba(255,150,90,${alpha})`;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-        }
-      }
-
-      // Glowing particles (soft radial blobs for bloom).
-      for (const p of particles) {
-        const a = alphaFor(p);
-        if (a <= 0) continue;
-        const r = p.size * 3;
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-        g.addColorStop(0, p.color);
+      // Nodes (glowing dots, brighter/larger when near the camera).
+      for (let i = 0; i < N; i++) {
+        const p = proj[i];
+        const size = (0.7 + p.depth * 1.9) * p.persp;
+        const a = 0.25 + p.depth * 0.75;
+        const g = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, size * 3);
+        g.addColorStop(0, nodes[i].color);
         g.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.globalAlpha = a;
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.arc(p.sx, p.sy, size * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Emitted particles streaming outward off the surface.
+      for (const e of emitters) {
+        const r = rotate(e.x, e.y, e.z, ca, sa);
+        const p = project(r.x, r.y, r.z);
+        const t = e.life / e.maxLife;
+        const a = Math.max(0, Math.sin(t * Math.PI)) * (0.3 + p.depth * 0.7);
+        if (a <= 0.02) continue;
+        const size = 1.4 * p.persp;
+        const g = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, size * 3);
+        g.addColorStop(0, e.color);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = a;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, size * 3, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
     };
 
     const step = () => {
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life += 1;
-        if (p.life >= p.maxLife || p.x < -24 || p.y < -24 || p.y > height + 24) {
-          spawn(p);
-        }
+      angle += 0.0016;
+      for (const e of emitters) {
+        e.x += e.vx;
+        e.y += e.vy;
+        e.z += e.vz;
+        e.life += 1;
+        const rad = Math.sqrt(e.x * e.x + e.y * e.y + e.z * e.z);
+        if (e.life >= e.maxLife || rad > 2.1) spawnEmitter(e);
       }
       draw();
       raf = requestAnimationFrame(step);
@@ -180,14 +220,15 @@ export function PlanetField({ className }: { className?: string }) {
       canvas.width = Math.max(1, Math.floor(width * dpr));
       canvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      computeGeometry();
-      initParticles();
+      // Anchor the planet toward the right, vertically centered.
+      R = Math.min(height * 0.42, width * 0.34, 360);
+      cx = width > 900 ? width * 0.74 : width * 0.6;
+      cy = height * 0.5;
       if (reduce) draw();
     };
 
     resize();
     window.addEventListener('resize', resize);
-
     if (!reduce) raf = requestAnimationFrame(step);
 
     return () => {
@@ -198,56 +239,7 @@ export function PlanetField({ className }: { className?: string }) {
 
   return (
     <div className={cn('relative h-full w-full overflow-hidden', className)}>
-      {/* Fiery Supernova planet — anchored partly off the right edge. */}
-      <div
-        aria-hidden
-        className={reduce ? 'planet-body' : 'planet-body pulse-anim'}
-        style={{
-          position: 'absolute',
-          right: '-6rem',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 'min(60vh, 560px)',
-          height: 'min(60vh, 560px)',
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle at 32% 42%, #ffd7a0 0%, #ff8a4c 34%, #ff5633 62%, #5c1403 100%)',
-          boxShadow: '0 0 120px 20px rgba(255,86,51,0.45)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Slowly rotating surface texture. */}
-        <div
-          className={reduce ? undefined : 'animate-[spin_60s_linear_infinite]'}
-          style={{
-            position: 'absolute',
-            inset: '-25%',
-            borderRadius: '50%',
-            background:
-              'radial-gradient(circle at 62% 30%, rgba(255,215,160,0.28), transparent 30%), radial-gradient(circle at 30% 70%, rgba(92,20,3,0.5), transparent 34%), conic-gradient(from 0deg, rgba(255,138,76,0.12), rgba(92,20,3,0.2), rgba(255,138,76,0.12))',
-            mixBlendMode: 'overlay',
-            opacity: 0.85,
-          }}
-        />
-        {/* Bright rim / atmosphere along the left limb (facing the content). */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            background:
-              'radial-gradient(circle at 6% 50%, rgba(255,215,160,0.55), transparent 24%)',
-            mixBlendMode: 'screen',
-          }}
-        />
-      </div>
-
-      {/* Particles + connecting lines emitted from the planet's left limb. */}
-      <canvas
-        ref={canvasRef}
-        aria-hidden
-        className="absolute inset-0 h-full w-full"
-      />
+      <canvas ref={canvasRef} aria-hidden className="h-full w-full" />
     </div>
   );
 }
