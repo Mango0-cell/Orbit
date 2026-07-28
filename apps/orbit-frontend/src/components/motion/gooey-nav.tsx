@@ -285,7 +285,7 @@ const GOOEY_CSS = `
   position: absolute;
   inset: -75px;
   z-index: -2;
-  background: black;
+  background: transparent;
 }
 .gooey-nav .effect.filter::after {
   content: '';
