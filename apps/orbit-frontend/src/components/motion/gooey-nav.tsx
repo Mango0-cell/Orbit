@@ -1,12 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
 
 /**
- * React Bits GooeyNav, tuned into a pronounced ferrofluid effect: a strong
- * blur+contrast goo filter merges a stretching metaball pill with a burst of
- * liquid droplet particles, and the resting pill idles with a slow living
- * wobble. Supernova colors (coral/amber/gold/crimson) throughout.
+ * React Bits GooeyNav — a faithful port of the original ferrofluid nav (true
+ * `blur(7px) contrast(100)` metaball goo + droplet burst + scaling pill), with
+ * two changes for this project: (1) all selectors are scoped under `.gooey-nav`
+ * so the global `li::after` / `.particle` rules can't leak onto other lists,
+ * and (2) it's retinted to the Supernova palette. Accessible (`<a href>` +
+ * keyboard) and reduced-motion safe.
  */
 export interface GooeyNavItem {
   label: string;
@@ -27,11 +35,11 @@ interface GooeyNavProps {
 export function GooeyNav({
   items,
   animationTime = 600,
-  particleCount = 18,
+  particleCount = 10,
   particleDistances = [90, 10],
-  particleR = 120,
+  particleR = 100,
   timeVariance = 300,
-  colors = [1, 2, 3, 1, 2, 4, 3, 2],
+  colors = [1, 2, 3, 1, 2, 3, 1, 4],
   initialActiveIndex = 0,
 }: GooeyNavProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -56,23 +64,25 @@ export function GooeyNav({
     return [distance * Math.cos(angle), distance * Math.sin(angle)];
   };
 
-  const createParticle = (i: number, t: number, d: [number, number], r: number) => {
+  const createParticle = (
+    i: number,
+    t: number,
+    d: [number, number],
+    r: number,
+  ) => {
     const rotate = noise(r / 10);
     return {
       start: getXY(d[0], particleCount - i, particleCount),
       end: getXY(d[1] + noise(7), particleCount - i, particleCount),
       time: t,
-      scale: 1.1 + noise(0.3),
+      scale: 1 + noise(0.2),
       color: colors[Math.floor(Math.random() * colors.length)],
       rotate: rotate > 0 ? (rotate + r / 20) * 10 : (rotate - r / 20) * 10,
     };
   };
 
   const makeParticles = (element: HTMLElement) => {
-    // Skip the droplet burst entirely for reduced-motion users (the CSS
-    // media query below also hides `.particle`, this just avoids the
-    // unnecessary DOM churn of creating/removing them).
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion()) return; // CSS also hides them; skip DOM churn.
     const bubbleTime = animationTime * 2 + timeVariance;
     element.style.setProperty('--time', `${bubbleTime}ms`);
     for (let i = 0; i < particleCount; i++) {
@@ -89,7 +99,10 @@ export function GooeyNav({
         particle.style.setProperty('--end-y', `${p.end[1]}px`);
         particle.style.setProperty('--time', `${p.time}ms`);
         particle.style.setProperty('--scale', `${p.scale}`);
-        particle.style.setProperty('--color', `var(--gooey-color-${p.color}, #ffc080)`);
+        particle.style.setProperty(
+          '--color',
+          `var(--gooey-color-${p.color}, #ffc080)`,
+        );
         particle.style.setProperty('--rotate', `${p.rotate}deg`);
         point.classList.add('point');
         particle.appendChild(point);
@@ -121,44 +134,30 @@ export function GooeyNav({
     textRef.current.innerText = element.innerText;
   };
 
-  const activate = (liEl: HTMLElement, index: number) => {
+  const activate = (anchorEl: HTMLElement, index: number) => {
     if (activeIndex === index) return;
     setActiveIndex(index);
-    updateEffectPosition(liEl);
+    updateEffectPosition(anchorEl);
     if (filterRef.current) {
-      filterRef.current
-        .querySelectorAll('.particle')
-        .forEach((p) => p.remove());
+      filterRef.current.querySelectorAll('.particle').forEach((p) => p.remove());
       makeParticles(filterRef.current);
     }
     if (textRef.current) {
       textRef.current.classList.remove('active');
-      // force reflow so the text re-animation restarts
-      void textRef.current.offsetWidth;
+      void textRef.current.offsetWidth; // force reflow to restart the anim
       textRef.current.classList.add('active');
     }
   };
 
-  const handleClick = (e: MouseEvent<HTMLLIElement>, index: number) =>
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>, index: number) =>
     activate(e.currentTarget, index);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLAnchorElement>, index: number) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    // Space would otherwise scroll the page; Enter is left to the browser's
-    // native <a href> navigation — only the visual pill gets triggered here.
+    // Space would scroll the page; Enter is left to native <a href> navigation.
     if (e.key === ' ') e.preventDefault();
-    const liEl = e.currentTarget.parentElement;
-    if (liEl) activate(liEl, index);
+    activate(e.currentTarget, index);
   };
-
-  // Mark the effect layer "ready" one frame after mount so the pill's very
-  // first layout doesn't slide in from (0,0) — only later moves stretch.
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      containerRef.current?.classList.add('is-ready');
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
 
   useEffect(() => {
     if (!navRef.current || !containerRef.current) return;
@@ -179,15 +178,21 @@ export function GooeyNav({
     <>
       <style>{GOOEY_CSS}</style>
       <div className="gooey-nav relative" ref={containerRef}>
-        <nav>
+        <nav
+          className="relative flex"
+          style={{ transform: 'translate3d(0,0,0.01px)' }}
+        >
           <ul ref={navRef}>
             {items.map((item, index) => (
               <li
                 key={item.label}
                 className={activeIndex === index ? 'active' : ''}
-                onClick={(e) => handleClick(e, index)}
               >
-                <a href={item.href} onKeyDown={(e) => handleKeyDown(e, index)}>
+                <a
+                  href={item.href}
+                  onClick={(e) => handleClick(e, index)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                >
                   {item.label}
                 </a>
               </li>
@@ -207,105 +212,174 @@ const GOOEY_CSS = `
   --gooey-color-2: #ffc080;
   --gooey-color-3: #e9c400;
   --gooey-color-4: #ff5633;
+  --gooey-pill: #ffc080;
 }
 .gooey-nav nav ul {
-  display: flex; gap: 0.5rem; list-style: none; padding: 0; margin: 0;
-  position: relative; z-index: 3;
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0 0.5rem;
+  margin: 0;
+  position: relative;
+  z-index: 3;
+  color: #e9bdb3;
 }
 .gooey-nav nav ul li {
-  position: relative; cursor: pointer; padding: 0.4rem 1rem;
-  border-radius: 9999px; color: #e9bdb3; transition: color 0.35s ease;
-  font-size: 0.875rem; font-weight: 500;
+  position: relative;
+  cursor: pointer;
+  border-radius: 9999px;
+  color: #e9bdb3;
+  transition: color 0.3s ease;
 }
-.gooey-nav nav ul li a { display: inline-block; color: inherit; text-decoration: none; }
-.gooey-nav nav ul li.active { color: #1a0d09; text-shadow: none; }
-.gooey-nav nav ul li.active::after {
-  content: ''; position: absolute; inset: 0; border-radius: 9999px;
-  background: var(--gooey-color-2);
-  background-image: radial-gradient(circle at 30% 30%, var(--gooey-color-2), var(--gooey-color-4) 130%);
+.gooey-nav nav ul li a {
+  display: inline-block;
+  padding: 0.4em 1em;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.gooey-nav nav ul li::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--gooey-pill);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
   z-index: -1;
-  animation: gooey-wobble 4.6s ease-in-out infinite;
-  transform-origin: center;
 }
-
-/* The effect layer tracks the active <li>'s box via inline left/top/width/
-   height set from JS; only transition it once mounted so the pill doesn't
-   fly in from the corner on first paint. The overshoot easing + the goo
-   filter below is what reads as a stretching metaball sliding between items. */
+.gooey-nav nav ul li.active {
+  color: #1a0d09;
+  text-shadow: none;
+}
+.gooey-nav nav ul li.active::after {
+  opacity: 1;
+  transform: scale(1);
+}
 .gooey-nav .effect {
-  position: absolute; opacity: 1; pointer-events: none; display: grid;
-  place-items: center; z-index: 1;
-}
-.gooey-nav.is-ready .effect {
-  transition:
-    left 0.65s cubic-bezier(0.34, 1.56, 0.64, 1),
-    top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    width 0.65s cubic-bezier(0.34, 1.56, 0.64, 1),
-    height 0.5s ease;
+  position: absolute;
+  opacity: 1;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 .gooey-nav .effect.text {
-  color: #1a0d09; font-size: 0.875rem; font-weight: 500;
-  transition: color 0.35s ease;
+  color: #e9bdb3;
+  transition: color 0.3s ease;
+}
+.gooey-nav .effect.text.active {
+  color: #1a0d09;
 }
 .gooey-nav .effect.filter {
-  filter: blur(9px) contrast(28) blur(0);
+  filter: blur(7px) contrast(100) blur(0);
   mix-blend-mode: lighten;
 }
 .gooey-nav .effect.filter::before {
-  content: ''; position: absolute; inset: -75px; z-index: -2; background: transparent;
+  content: '';
+  position: absolute;
+  inset: -75px;
+  z-index: -2;
+  background: black;
 }
 .gooey-nav .effect.filter::after {
-  content: ''; position: absolute; inset: 0;
-  background-image: radial-gradient(circle at 35% 30%, var(--gooey-color-2), var(--gooey-color-4) 130%);
-  transform: scale(0); opacity: 0; z-index: -1; border-radius: 9999px;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gooey-pill);
+  transform: scale(0);
+  opacity: 0;
+  z-index: -1;
+  border-radius: 9999px;
 }
 .gooey-nav .effect.active::after {
-  animation:
-    gooey-pill var(--time, 600ms) cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-    gooey-wobble 4.6s ease-in-out var(--time, 600ms) infinite;
+  animation: gooey-pill 0.3s ease both;
 }
 @keyframes gooey-pill {
-  0% { transform: scale(0.4, 0.7); opacity: 0.5; }
-  55% { transform: scale(1.45, 0.82); opacity: 1; }
-  75% { transform: scale(0.9, 1.08); opacity: 1; }
-  100% { transform: scale(1, 1); opacity: 1; }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
-@keyframes gooey-wobble {
-  0%, 100% { transform: scale(1, 1) translate(0, 0); }
-  25% { transform: scale(1.035, 0.965) translate(1px, -0.5px); }
-  50% { transform: scale(0.965, 1.035) translate(-1px, 0.5px); }
-  75% { transform: scale(1.02, 0.98) translate(0.5px, -0.5px); }
-}
-.gooey-nav .particle, .gooey-nav .point {
-  display: block; opacity: 0; width: 26px; height: 26px; border-radius: 9999px;
+.gooey-nav .particle,
+.gooey-nav .point {
+  display: block;
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
   transform-origin: center;
 }
 .gooey-nav .particle {
-  position: absolute; top: calc(50% - 13px); left: calc(50% - 13px);
+  --time: 5s;
+  position: absolute;
+  top: calc(50% - 8px);
+  left: calc(50% - 8px);
   animation: gooey-particle calc(var(--time)) ease 1 -350ms;
 }
-.gooey-nav .point { background: var(--color); opacity: 1; animation: gooey-point calc(var(--time)) ease 1 -350ms; }
+.gooey-nav .point {
+  background: var(--color);
+  opacity: 1;
+  animation: gooey-point calc(var(--time)) ease 1 -350ms;
+}
 @keyframes gooey-particle {
-  0% { transform: rotate(0deg) translate(var(--start-x), var(--start-y)); opacity: 1; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
-  70% { transform: rotate(calc(var(--rotate) * 0.5)) translate(calc(var(--end-x) * 1.2), calc(var(--end-y) * 1.2)); opacity: 1; animation-timing-function: ease; }
-  85% { transform: rotate(calc(var(--rotate) * 0.66)) translate(var(--end-x), var(--end-y)); opacity: 1; }
-  100% { transform: rotate(calc(var(--rotate) * 1.2)) translate(calc(var(--end-x) * 0.5), calc(var(--end-y) * 0.5)); opacity: 0; }
+  0% {
+    transform: rotate(0deg) translate(var(--start-x), var(--start-y));
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  70% {
+    transform: rotate(calc(var(--rotate) * 0.5)) translate(calc(var(--end-x) * 1.2), calc(var(--end-y) * 1.2));
+    opacity: 1;
+    animation-timing-function: ease;
+  }
+  85% {
+    transform: rotate(calc(var(--rotate) * 0.66)) translate(var(--end-x), var(--end-y));
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(calc(var(--rotate) * 1.2)) translate(calc(var(--end-x) * 0.5), calc(var(--end-y) * 0.5));
+    opacity: 1;
+  }
 }
 @keyframes gooey-point {
-  0% { transform: scale(0); opacity: 0; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
-  25% { transform: scale(calc(var(--scale) * 0.25)); }
-  38% { opacity: 1; }
-  65% { transform: scale(var(--scale)); opacity: 1; animation-timing-function: ease; }
-  85% { transform: scale(var(--scale)); opacity: 1; }
-  100% { transform: scale(0); opacity: 0; }
+  0% {
+    transform: scale(0);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  25% {
+    transform: scale(calc(var(--scale) * 0.25));
+  }
+  38% {
+    opacity: 1;
+  }
+  65% {
+    transform: scale(var(--scale));
+    opacity: 1;
+    animation-timing-function: ease;
+  }
+  85% {
+    transform: scale(var(--scale));
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gooey-nav .particle, .gooey-nav .effect.filter { display: none; }
-  .gooey-nav .effect,
-  .gooey-nav .effect.active::after,
-  .gooey-nav nav ul li.active::after {
-    transition: none !important;
-    animation: none !important;
+  .gooey-nav .particle,
+  .gooey-nav .effect.filter {
+    display: none;
+  }
+  .gooey-nav nav ul li::after {
+    transition: none;
   }
 }
 `;

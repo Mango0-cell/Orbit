@@ -3,10 +3,10 @@ import {
   MdKeyboardArrowDown,
   MdRocketLaunch,
 } from 'react-icons/md';
-import { BlurText } from '@/components/motion/blur-text';
 import { FadeIn } from '@/components/motion/fade-in';
 import { StarBorder } from '@/components/motion/star-border';
 import { PlanetField } from '@/components/marketing/planet-field';
+import { HeroLogoTitle } from '@/components/marketing/hero-logo-title';
 
 export function Hero() {
   return (
@@ -15,12 +15,7 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 pt-24 md:px-12 lg:grid-cols-2">
         <div className="flex flex-col items-start text-left">
-          <BlurText
-            text="Orbit"
-            animateBy="words"
-            delay={180}
-            className="gradient-text mb-6 text-5xl font-bold leading-[1.05] tracking-tight drop-shadow-2xl md:text-6xl lg:text-7xl"
-          />
+          <HeroLogoTitle />
           <FadeIn delay={0.15}>
             <p className="mb-12 max-w-xl text-body-lg text-on-surface-variant">
               Harness the power of an intelligent, decentralized network designed
