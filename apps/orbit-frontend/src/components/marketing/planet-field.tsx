@@ -77,7 +77,7 @@ void main(){
  */
 export function PlanetField({
   className,
-  variant = 'teal',
+  variant = 'warm',
 }: {
   className?: string;
   variant?: keyof typeof PALETTES;
