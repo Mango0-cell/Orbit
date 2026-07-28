@@ -537,6 +537,12 @@ export function MetallicPaint({
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // The liquid metal "activates" in a burst once every PERIOD ms, then holds
+    // its last frame — a shimmer pulse every 5 seconds rather than a constant flow.
+    const PERIOD = 5000;
+    const BURST = 2200;
+    const loopStart = performance.now();
+
     const render = (time: number) => {
       const delta = time - lastTimeRef.current;
       lastTimeRef.current = time;
@@ -546,7 +552,12 @@ export function MetallicPaint({
         mouse.y += (mouse.targetY - mouse.y) * 0.08;
         animTimeRef.current = mouse.x * 3000 + mouse.y * 1500;
       } else {
-        animTimeRef.current += delta * speedRef.current;
+        const inCycle = (time - loopStart) % PERIOD;
+        const gate =
+          inCycle < BURST
+            ? 0.5 - 0.5 * Math.cos((inCycle / BURST) * Math.PI * 2)
+            : 0;
+        animTimeRef.current += delta * speedRef.current * gate * 2.4;
       }
 
       gl.uniform1f(u.u_time, animTimeRef.current);
