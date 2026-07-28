@@ -16,14 +16,14 @@ export function Hero() {
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 pt-24 md:px-12 lg:grid-cols-2">
         <div className="flex flex-col items-start text-left">
           <HeroLogoTitle />
-          <FadeIn delay={0.15}>
+          <FadeIn delay={0.95}>
             <p className="mb-12 max-w-xl text-body-lg text-on-surface-variant">
               Harness the power of an intelligent, decentralized network designed
               to withstand the extremes of deep space communication and stellar
               discovery.
             </p>
           </FadeIn>
-          <FadeIn delay={0.3} className="flex flex-col gap-6 sm:flex-row">
+          <FadeIn delay={1.2} className="flex flex-col gap-6 sm:flex-row">
             <StarBorder href="/signup" innerClassName="px-8 py-4 text-label-md font-bold">
               Initiate Sequence
               <MdRocketLaunch className="text-lg" aria-hidden />
