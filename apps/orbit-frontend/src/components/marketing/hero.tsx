@@ -6,13 +6,11 @@ import {
 import { FadeIn } from '@/components/motion/fade-in';
 import { StarBorder } from '@/components/motion/star-border';
 import { PlanetField } from '@/components/marketing/planet-field';
-import { RibbonBackground } from '@/components/marketing/ribbon-background';
 import { HeroLogoTitle } from '@/components/marketing/hero-logo-title';
 
 export function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden">
-      <RibbonBackground className="absolute inset-0 z-0" />
       <PlanetField className="absolute inset-0 z-0" />
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 pt-24 md:px-12 lg:grid-cols-2">

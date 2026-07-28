@@ -197,6 +197,34 @@ export function PlanetField({ className }: { className?: string }) {
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+
+      // ── Orbit ring rounding the planet (slightly tilted), warm ──
+      const orbitR = R * 1.34;
+      const flat = 0.32;
+      const tilt = -0.34;
+      ctx.lineWidth = 9;
+      ctx.strokeStyle = 'rgba(255,120,50,0.10)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, orbitR, orbitR * flat, tilt, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,180,95,0.7)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, orbitR, orbitR * flat, tilt, 0, Math.PI * 2);
+      ctx.stroke();
+      // A small bright body travelling along the orbit.
+      const oa = angle * 2.4;
+      const ex = orbitR * Math.cos(oa);
+      const ey = orbitR * flat * Math.sin(oa);
+      const px = cx + ex * Math.cos(tilt) - ey * Math.sin(tilt);
+      const py = cy + ex * Math.sin(tilt) + ey * Math.cos(tilt);
+      const dg = ctx.createRadialGradient(px, py, 0, px, py, 7);
+      dg.addColorStop(0, '#ffe4b8');
+      dg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = dg;
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, Math.PI * 2);
+      ctx.fill();
     };
 
     const step = () => {
