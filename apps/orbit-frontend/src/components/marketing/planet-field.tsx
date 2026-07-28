@@ -197,40 +197,6 @@ export function PlanetField({ className }: { className?: string }) {
         ctx.fill();
       }
       ctx.globalAlpha = 1;
-
-      // ── Elongated, tilted orbit: wraps the planet, sweeps toward the title ──
-      const e1x = cx - R * 0.35; // near end, over the planet's left side
-      const e1y = cy + R * 0.05;
-      const e2x = width * 0.3; // far end — the tail tip, low-left toward the copy
-      const e2y = height * 0.94;
-      const ocx = (e1x + e2x) / 2;
-      const ocy = (e1y + e2y) / 2;
-      const oaxis = Math.hypot(e1x - e2x, e1y - e2y) / 2; // semi-major
-      const obax = R * 0.8; // semi-minor (wraps the planet at the near end)
-      const oth = Math.atan2(e1y - e2y, e1x - e2x); // tilt of the major axis
-      ctx.lineWidth = 9;
-      ctx.strokeStyle = 'rgba(255,120,50,0.08)';
-      ctx.beginPath();
-      ctx.ellipse(ocx, ocy, oaxis, obax, oth, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(255,175,90,0.6)';
-      ctx.beginPath();
-      ctx.ellipse(ocx, ocy, oaxis, obax, oth, 0, Math.PI * 2);
-      ctx.stroke();
-      // A small bright body travelling along the orbit.
-      const pa = angle * 1.5;
-      const bex = oaxis * Math.cos(pa);
-      const bey = obax * Math.sin(pa);
-      const bx = ocx + bex * Math.cos(oth) - bey * Math.sin(oth);
-      const by = ocy + bex * Math.sin(oth) + bey * Math.cos(oth);
-      const dg = ctx.createRadialGradient(bx, by, 0, bx, by, 7);
-      dg.addColorStop(0, '#ffe4b8');
-      dg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = dg;
-      ctx.beginPath();
-      ctx.arc(bx, by, 7, 0, Math.PI * 2);
-      ctx.fill();
     };
 
     const step = () => {
