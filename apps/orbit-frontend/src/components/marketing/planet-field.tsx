@@ -149,7 +149,50 @@ export function PlanetField({
       aria-hidden
       className={cn('pointer-events-none overflow-hidden', className)}
     >
-      <canvas ref={canvasRef} className="h-full w-full" />
+      {/* Flowing liquid-light ribbon (streams from the planet's left limb). */}
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+
+      {/* Warm Supernova planet, anchored partly off the right edge. */}
+      <div
+        className={reduce ? 'absolute' : 'absolute pulse-anim'}
+        style={{
+          right: '-6rem',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 'min(60vh, 560px)',
+          height: 'min(60vh, 560px)',
+          borderRadius: '50%',
+          background:
+            'radial-gradient(circle at 34% 38%, #ffd7a0 0%, #ff8a4c 30%, #ff5633 58%, #6e1a04 100%)',
+          boxShadow: '0 0 130px 26px rgba(255, 86, 51, 0.45)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Slowly rotating surface texture. */}
+        <div
+          className={reduce ? undefined : 'animate-[spin_70s_linear_infinite]'}
+          style={{
+            position: 'absolute',
+            inset: '-25%',
+            borderRadius: '50%',
+            background:
+              'radial-gradient(circle at 62% 30%, rgba(255,215,160,0.3), transparent 30%), radial-gradient(circle at 30% 70%, rgba(110,26,4,0.5), transparent 34%), conic-gradient(from 0deg, rgba(255,138,76,0.12), rgba(110,26,4,0.22), rgba(255,138,76,0.12))',
+            mixBlendMode: 'overlay',
+            opacity: 0.85,
+          }}
+        />
+        {/* Bright rim along the left limb, facing the content. */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '50%',
+            background:
+              'radial-gradient(circle at 8% 50%, rgba(255,215,160,0.5), transparent 26%)',
+            mixBlendMode: 'screen',
+          }}
+        />
+      </div>
     </div>
   );
 }
