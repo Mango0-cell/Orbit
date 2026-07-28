@@ -220,10 +220,10 @@ export function PlanetField({ className }: { className?: string }) {
       canvas.width = Math.max(1, Math.floor(width * dpr));
       canvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // Anchor the planet toward the right, vertically centered.
-      R = Math.min(height * 0.42, width * 0.34, 360);
-      cx = width > 900 ? width * 0.74 : width * 0.6;
-      cy = height * 0.5;
+      // Anchor the planet toward the lower-right, a touch smaller.
+      R = Math.min(height * 0.50, width * 0.28, 325);
+      cx = width > 900 ? width * 0.93 : width * 0.62;
+      cy = height * 0.55;
       if (reduce) draw();
     };
 

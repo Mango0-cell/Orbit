@@ -32,7 +32,7 @@ export function HeroLogoTitle() {
         aria-hidden
         className="relative block select-none"
         style={{
-          width: 'clamp(300px, 48vw, 560px)',
+          width: 'clamp(210px, 32vw, 380px)',
           aspectRatio: '560 / 205',
           filter: 'drop-shadow(0 8px 30px rgba(255, 86, 51, 0.25))',
         }}
