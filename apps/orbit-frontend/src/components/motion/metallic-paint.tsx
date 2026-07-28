@@ -320,7 +320,7 @@ export function MetallicPaint({
   const glRef = useRef<WebGL2RenderingContext | null>(null);
   const uniformsRef = useRef<Record<string, WebGLUniformLocation | null>>({});
   const textureRef = useRef<WebGLTexture | null>(null);
-  const animTimeRef = useRef(0);
+  const animTimeRef = useRef(1800); // start mid-flow so the first/static frame looks developed
   const lastTimeRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const speedRef = useRef(speed);
