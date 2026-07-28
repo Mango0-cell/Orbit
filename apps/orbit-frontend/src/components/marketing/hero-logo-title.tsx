@@ -5,20 +5,20 @@ import { motion, useReducedMotion } from 'motion/react';
 
 /**
  * Hero title — the Orbit wordmark assembled from the Stitch "Logo Asset
- * Decomposition" pieces (the separate O/r/b/i/t letter assets). On first load
- * each letter reveals one-by-one (blur + fade + rise) and, while it appears, the
- * Planet Ring asset orbits around that letter, then fades — leaving the clean
- * wordmark. Reduced-motion renders the assembled wordmark with no orbits.
- *
- * left/top/width/height are % of the wordmark box (587 x 201), computed from the
- * baseline-aligned assembly of the extracted glyphs.
+ * Decomposition" pieces (separate O/r/b/i/t letters, saturation-keyed off the
+ * sheet). Each letter reveals one-by-one (blur + fade + rise). Two orbits from
+ * the sheet are then drawn slowly and softly, layered in front of the letters:
+ * the Planet Ring around the O, and the Grand Orbital Swoosh over the last
+ * letters. Images are `unoptimized` so their transparency stays pristine.
+ * Reduced-motion renders it fully assembled. left/top/width/height are % of the
+ * wordmark box (560 x 205).
  */
 const LETTERS = [
-  { src: '/orbit2-o.webp', left: 0, top: 0, width: 30.15, height: 97.0, w: 177, h: 195 },
-  { src: '/orbit2-r.webp', left: 32.2, top: 17.4, width: 15.16, height: 82.1, w: 89, h: 165 },
-  { src: '/orbit2-b.webp', left: 45.14, top: 8.46, width: 24.19, height: 89.05, w: 142, h: 179 },
-  { src: '/orbit2-i.webp', left: 69.68, top: 12.44, width: 10.73, height: 87.56, w: 63, h: 176 },
-  { src: '/orbit2-t.webp', left: 81.77, top: 16.92, width: 18.23, height: 82.09, w: 107, h: 165 },
+  { src: '/orbit2-o.webp', left: 0, top: 0, width: 33.75, height: 99.51, w: 306, h: 331 },
+  { src: '/orbit2-r.webp', left: 33.93, top: 20.98, width: 16.61, height: 79.02, w: 133, h: 232 },
+  { src: '/orbit2-b.webp', left: 42.32, top: 6.83, width: 29.82, height: 92.2, w: 239, h: 271 },
+  { src: '/orbit2-i.webp', left: 70.36, top: 12.2, width: 12.5, height: 87.8, w: 101, h: 258 },
+  { src: '/orbit2-t.webp', left: 79.46, top: 17.07, width: 20.54, height: 81.46, w: 165, h: 240 },
 ];
 
 export function HeroLogoTitle() {
@@ -26,76 +26,123 @@ export function HeroLogoTitle() {
 
   return (
     <h1 className="orbit-logo relative mb-6">
+      <style>{ORBIT_CSS}</style>
       <span className="sr-only">Orbit</span>
       <span
         aria-hidden
         className="relative block select-none"
         style={{
           width: 'clamp(300px, 48vw, 560px)',
-          aspectRatio: '587 / 201',
+          aspectRatio: '560 / 205',
           filter: 'drop-shadow(0 8px 30px rgba(255, 86, 51, 0.25))',
         }}
       >
-        {LETTERS.map((L, i) => {
-          const start = 0.15 + i * 0.18;
-          return (
-            <span
-              key={i}
-              className="absolute"
-              style={{
-                left: `${L.left}%`,
-                top: `${L.top}%`,
-                width: `${L.width}%`,
-                height: `${L.height}%`,
-                perspective: '600px',
-              }}
-            >
-              {/* Planet-Ring orbit that surrounds + turns around this letter. */}
-              {!reduce && (
-                <motion.img
-                  src="/orbit2-ring.webp"
-                  alt=""
-                  aria-hidden
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-auto max-w-none"
-                  style={{ width: '175%', x: '-50%', y: '-50%', transformOrigin: 'center' }}
-                  initial={{ opacity: 0, rotateY: -90 }}
-                  animate={{ opacity: [0, 0.9, 0.85, 0], rotateY: 200 }}
-                  transition={{
-                    duration: 1.5,
-                    delay: start,
-                    times: [0, 0.25, 0.65, 1],
-                    ease: 'easeInOut',
-                  }}
-                />
-              )}
+        {/* Letters — reveal one-by-one, behind the orbits. */}
+        {LETTERS.map((L, i) => (
+          <motion.span
+            key={i}
+            className="absolute z-10 block"
+            style={{
+              left: `${L.left}%`,
+              top: `${L.top}%`,
+              width: `${L.width}%`,
+              height: `${L.height}%`,
+            }}
+            initial={
+              reduce ? false : { opacity: 0, y: '-30%', filter: 'blur(10px)' }
+            }
+            animate={{ opacity: 1, y: '0%', filter: 'blur(0px)' }}
+            transition={
+              reduce
+                ? { duration: 0 }
+                : { duration: 0.6, delay: 0.15 + i * 0.16, ease: [0.22, 1, 0.36, 1] }
+            }
+          >
+            <Image
+              src={L.src}
+              alt=""
+              aria-hidden
+              width={L.w}
+              height={L.h}
+              priority
+              unoptimized
+              className="h-full w-full object-fill"
+            />
+          </motion.span>
+        ))}
 
-              {/* The letter itself — reveals with a blur/fade/rise. */}
-              <motion.span
-                className="absolute inset-0 z-10 block"
-                initial={
-                  reduce ? false : { opacity: 0, y: '-30%', filter: 'blur(10px)' }
-                }
-                animate={{ opacity: 1, y: '0%', filter: 'blur(0px)' }}
-                transition={
-                  reduce
-                    ? { duration: 0 }
-                    : { duration: 0.6, delay: start + 0.15, ease: [0.22, 1, 0.36, 1] }
-                }
-              >
-                <Image
-                  src={L.src}
-                  alt=""
-                  aria-hidden
-                  width={L.w}
-                  height={L.h}
-                  priority
-                  className="h-full w-full object-fill"
-                />
-              </motion.span>
-            </span>
-          );
-        })}
+        {/* Planet Ring — drawn slowly around the O, in front. */}
+        <div
+          className={`orbit-draw absolute ${reduce ? '' : 'orbit-animate'}`}
+          style={{
+            left: '17%',
+            top: '49%',
+            width: '52%',
+            zIndex: 20,
+            transform: 'translate(-50%, -50%)',
+            mixBlendMode: 'screen',
+            animationDelay: '0.5s',
+          }}
+        >
+          <Image
+            src="/orbit2-ring.webp"
+            alt=""
+            aria-hidden
+            width={371}
+            height={277}
+            unoptimized
+            className="h-auto w-full"
+          />
+        </div>
+
+        {/* Grand Orbital Swoosh — drawn slowly over the last letters, in front. */}
+        <div
+          className={`orbit-draw absolute ${reduce ? '' : 'orbit-animate'}`}
+          style={{
+            left: '74%',
+            top: '50%',
+            width: '64%',
+            zIndex: 20,
+            transform: 'translate(-50%, -50%)',
+            mixBlendMode: 'screen',
+            animationDelay: '1.25s',
+          }}
+        >
+          <Image
+            src="/orbit2-swoosh.webp"
+            alt=""
+            aria-hidden
+            width={465}
+            height={312}
+            unoptimized
+            className="h-auto w-full"
+          />
+        </div>
       </span>
     </h1>
   );
 }
+
+const ORBIT_CSS = `
+@property --orbit-draw {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%;
+}
+.orbit-draw {
+  --orbit-draw: 100%;
+  -webkit-mask-image: conic-gradient(from -90deg, #000 var(--orbit-draw), transparent 0);
+  mask-image: conic-gradient(from -90deg, #000 var(--orbit-draw), transparent 0);
+}
+.orbit-animate {
+  animation: orbit-draw-kf 2.6s cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+@keyframes orbit-draw-kf {
+  0% { --orbit-draw: 0%; opacity: 0; }
+  12% { opacity: 1; }
+  100% { --orbit-draw: 100%; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit-animate { animation: none; --orbit-draw: 100%; }
+}
+`;
