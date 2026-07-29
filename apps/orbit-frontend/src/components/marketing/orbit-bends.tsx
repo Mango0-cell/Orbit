@@ -15,7 +15,7 @@ type Half = 'back' | 'front' | 'full';
 
 // Colors sampled directly from the Orbit logo (orbit-logo.webp), hue-ordered
 // into its real fiery ramp: deep red → red-orange → orange → amber → pale gold.
-const WARM = ['#d74c3d', '#e45530', '#eb7343', '#f58727'];
+const WARM = ['#d7733dc6', '#e47230d5', '#eb8643bb'];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -82,15 +82,21 @@ void main(){
   float shine = pow(cover, 2.0) * band;                // tighter sheen, flows where field peaks
   col += vec3(1.0, 0.86, 0.55) * shine * u_shine;      // warm-gold specular glint (added after)
   col = clamp(col, 0.0, 1.25);
-  // Translucent so the planet reads through it — same visual weight, not occluding.
-  float alpha = band * u_opacity;
+  // Opacity ramps GRADUALLY along the whole ribbon: faint at the far/back, rising
+  // to fully opaque at the near/front (so the front occludes the planet). pr.y
+  // runs -u_ry (front) → +u_ry (back).
+  float frontness = smoothstep(u_ry, -u_ry, pr.y);   // 1 at front, 0 at back
+  float op = mix(0.2, 1.0, frontness) * u_opacity;   // 0.2 back → 1.0 front
+  float alpha = band * op;
 
-  // Wrap split along the ring's tilted MAJOR AXIS (pr.y = the near/far divider,
-  // crossing the ellipse at its edge-on endpoints). pr.y < 0 = near (FRONT of the
-  // planet); pr.y > 0 = far (BEHIND). Each half stays FULLY opaque up to the
-  // divider and overlaps slightly past it, so the two halves meet with no gap.
-  if (u_half > 0.5) alpha *= 1.0 - smoothstep(0.0, 0.05, pr.y);        // front (near)
-  else if (u_half < -0.5) alpha *= 1.0 - smoothstep(0.0, 0.05, -pr.y); // back (far)
+  // Front/back crossfade along the ring (pr.y: -u_ry near/front → +u_ry far/back).
+  // The FRONT layer stays FULLY opaque across the whole near side (pr.y <= 0), so
+  // where it crosses the planet it sits ON TOP of it; it only hands off to the
+  // blurred BACK layer past the edge-on crossover (pr.y > 0), where the blur then
+  // intensifies toward the far side.
+  float blurAmt = smoothstep(0.0, u_ry, pr.y);     // 0 across the near side, 1 at back
+  if (u_half > 0.5) alpha *= 1.0 - blurAmt;        // front layer — solid over the near side
+  else if (u_half < -0.5) alpha *= blurAmt;        // back layer — far side, blurred
 
   gl_FragColor = vec4(col, alpha);
 }`;
@@ -158,14 +164,15 @@ export function OrbitBends({
     gl.uniform1f(U('u_tilt'), (18 * Math.PI) / 180);
     gl.uniform1f(U('u_thickness'), 0.2);
     gl.uniform1f(U('u_half'), half === 'front' ? 1 : half === 'back' ? -1 : 0);
-    gl.uniform1f(U('u_speed'), 0.55);
+    gl.uniform1f(U('u_speed'), -1.8); // negative = clockwise (matches the planet's rotation)
     gl.uniform1f(U('u_freq'), 1);
     gl.uniform1f(U('u_bandWidth'), 6);
     gl.uniform1f(U('u_intensity'), 1.0);
     gl.uniform1f(U('u_around'), 3.0);
     gl.uniform1f(U('u_across'), 0.6);
     gl.uniform1f(U('u_shine'), 0.3);
-    gl.uniform1f(U('u_opacity'), 0.8); // translucent — same weight as the planet
+    // Overall opacity scale; the shader ramps it gradually back→front per fragment.
+    gl.uniform1f(U('u_opacity'), 1.0);
 
     let raf = 0;
     const startT = performance.now();
@@ -197,7 +204,16 @@ export function OrbitBends({
     <div
       aria-hidden
       className={className}
-      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        // Whole ribbon is blurred, intensifying front→back: the front layer
+        // carries a soft base blur, the back layer a much heavier one. Combined
+        // with the shader's front→back alpha crossfade, the blur ramps up toward
+        // the back so it clearly reads as receding behind the planet.
+        filter: half === 'back' ? 'blur(16px)' : 'blur(4px)',
+      }}
     >
       <canvas ref={canvasRef} className="h-full w-full" />
     </div>
