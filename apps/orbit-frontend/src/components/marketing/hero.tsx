@@ -6,31 +6,17 @@ import {
 import { FadeIn } from '@/components/motion/fade-in';
 import { StarBorder } from '@/components/motion/star-border';
 import { PlanetField } from '@/components/marketing/planet-field';
-import { ColorBends } from '@/components/motion/color-bends';
+import { PlanetOrbit } from '@/components/marketing/planet-orbit';
 import { HeroLogoTitle } from '@/components/marketing/hero-logo-title';
 
 export function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden">
-      {/* Flowing warm "orbit" bands, centred on the planet so they round it. */}
-      <div aria-hidden className="absolute inset-0 z-0">
-        <ColorBends
-          colors={['#ff5633', '#ffc080', '#e9c400', '#ff8a4c']}
-          rotation={ -500 }
-          speed={0.14}
-          scale={1.1}
-          frequency={1}
-          warpStrength={1}
-          iterations={2}
-          intensity={1.35}
-          bandWidth={6}
-          noise={0.05}
-          mouseInfluence={0.4}
-          parallax={0.4}
-          transparent
-        />
-      </div>
-      <PlanetField className="absolute inset-0 z-0" />
+      {/* Orbit ring (ColorBends), wrapping the planet: far half behind it… */}
+      <PlanetOrbit half="back" className="z-0" />
+      <PlanetField className="absolute inset-0 z-[1]" />
+      {/* …near half in front of it, completing the Saturn-style wrap. */}
+      <PlanetOrbit half="front" className="z-[2]" />
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 pt-24 md:px-12 lg:grid-cols-2">
         <div className="flex flex-col items-start text-left">
