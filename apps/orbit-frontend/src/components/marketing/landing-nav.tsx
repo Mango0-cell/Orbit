@@ -12,7 +12,7 @@ const LINKS = [
 
 export function LandingNav() {
   return (
-    <nav className="fixed top-0 z-50 flex w-full items-center justify-between border-b border-white/10 bg-surface/70 px-4 py-4 backdrop-blur-xl md:px-12">
+    <nav className="fixed top-0 z-50 flex w-full items-center justify-between overflow-hidden border-b border-white/10 bg-surface/70 px-4 py-4 backdrop-blur-xl md:px-12">
       <Logo />
       <div className="hidden items-center md:flex">
         <GooeyNav items={LINKS} />
