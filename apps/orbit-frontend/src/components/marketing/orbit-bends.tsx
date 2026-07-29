@@ -13,9 +13,9 @@ import { useReducedMotion } from 'motion/react';
  */
 type Half = 'back' | 'front' | 'full';
 
-// Supernova app palette — warm only (crimson → orange → amber → coral); the
-// greenish gold is left out of the ribbon flow so it stays fiery, not olive.
-const WARM = ['#ff5633', '#ff8a4c', '#ffc080', '#ffb4a4'];
+// Colors sampled directly from the Orbit logo (orbit-logo.webp), hue-ordered
+// into its real fiery ramp: deep red → red-orange → orange → amber → pale gold.
+const WARM = ['#d7463d', '#e45530', '#eb8743', '#f3b765', '#fbe08b'];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -153,9 +153,9 @@ export function OrbitBends({
     }
     // Orbit centred on the planet (uv, bottom-up), radii in height-relative units.
     gl.uniform2f(U('u_center'), 0.93, 0.45);
-    gl.uniform1f(U('u_rx'), 0.9);
-    gl.uniform1f(U('u_ry'), 0.22);
-    gl.uniform1f(U('u_tilt'), (-20 * Math.PI) / 180);
+    gl.uniform1f(U('u_rx'), 0.8);
+    gl.uniform1f(U('u_ry'), 0.20);
+    gl.uniform1f(U('u_tilt'), (18 * Math.PI) / 180);
     gl.uniform1f(U('u_thickness'), 0.2);
     gl.uniform1f(U('u_half'), half === 'front' ? 1 : half === 'back' ? -1 : 0);
     gl.uniform1f(U('u_speed'), 0.28);
