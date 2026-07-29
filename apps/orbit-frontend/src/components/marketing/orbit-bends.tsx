@@ -17,6 +17,12 @@ type Half = 'back' | 'front' | 'full';
 // into its real fiery ramp: deep red → red-orange → orange → amber → pale gold.
 const WARM = ['#d7733dc6', '#e47230d5', '#eb8643bb'];
 
+// Opacity of the ribbon at 8 evenly-spaced points AROUND the ring (n = 0..1,
+// where n≈0/1 is the far-left tip, n≈0.25 the near/front-bottom, n≈0.5 the right,
+// n≈0.75 the far/back-top). Edit any stop to manage that part's opacity. The
+// shader interpolates smoothly between stops.
+const OPACITY_STOPS = [0.6, 0.7, 1.2, 2.3, 2.2, 0.55, 0.6, 0.6, 1.6];
+
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
   return [
@@ -37,6 +43,7 @@ uniform float u_time, u_rx, u_ry, u_tilt, u_thickness, u_half;
 uniform float u_speed, u_freq, u_bandWidth, u_intensity, u_around, u_across, u_shine, u_opacity;
 uniform int u_ncol;
 uniform vec3 u_colors[8];
+uniform float u_op[8];   // per-part opacity around the ring (8 stops)
 
 void main(){
   vec2 uv = gl_FragCoord.xy / u_res.xy;      // 0..1 (y up)
@@ -82,11 +89,18 @@ void main(){
   float shine = pow(cover, 2.0) * band;                // tighter sheen, flows where field peaks
   col += vec3(1.0, 0.86, 0.55) * shine * u_shine;      // warm-gold specular glint (added after)
   col = clamp(col, 0.0, 1.25);
-  // Opacity ramps GRADUALLY along the whole ribbon: faint at the far/back, rising
-  // to fully opaque at the near/front (so the front occludes the planet). pr.y
-  // runs -u_ry (front) → +u_ry (back).
-  float frontness = smoothstep(u_ry, -u_ry, pr.y);   // 1 at front, 0 at back
-  float op = mix(0.2, 1.0, frontness) * u_opacity;   // 0.2 back → 1.0 front
+  // Per-part opacity: interpolate the 8 stops around the ring by n (position
+  // around the ellipse, 0..1). Tent weights blend the two nearest stops, so each
+  // stop controls its part of the ribbon and transitions are smooth.
+  float n = (theta + 3.14159265) / 6.2831853;   // 0..1 around the ring
+  float opNum = 0.0, opDen = 0.0;
+  for (int i = 0; i < 8; i++) {
+    float c = float(i) / 7.0;
+    float wgt = max(0.0, 1.0 - abs(n - c) * 7.0);
+    opNum += u_op[i] * wgt;
+    opDen += wgt;
+  }
+  float op = (opNum / max(opDen, 0.001)) * u_opacity;
   float alpha = band * op;
 
   // Front/back crossfade along the ring (pr.y: -u_ry near/front → +u_ry far/back).
@@ -157,6 +171,8 @@ export function OrbitBends({
     for (let i = 0; i < rgb.length; i++) {
       gl.uniform3fv(U(`u_colors[${i}]`), rgb[i]);
     }
+    // Per-part opacity stops around the ring.
+    gl.uniform1fv(U('u_op'), new Float32Array(OPACITY_STOPS));
     // Orbit centred on the planet (uv, bottom-up), radii in height-relative units.
     gl.uniform2f(U('u_center'), 0.93, 0.45);
     gl.uniform1f(U('u_rx'), 0.8);
@@ -171,9 +187,8 @@ export function OrbitBends({
     gl.uniform1f(U('u_around'), 3.0);
     gl.uniform1f(U('u_across'), 0.6);
     gl.uniform1f(U('u_shine'), 0.3);
-    // Overall opacity scale; the shader ramps it gradually back→front per fragment.
+    // Overall scale; per-part opacity is managed by OPACITY_STOPS in the shader.
     gl.uniform1f(U('u_opacity'), 1.0);
-
     let raf = 0;
     const startT = performance.now();
     const draw = (now: number) => {
@@ -212,7 +227,7 @@ export function OrbitBends({
         // carries a soft base blur, the back layer a much heavier one. Combined
         // with the shader's front→back alpha crossfade, the blur ramps up toward
         // the back so it clearly reads as receding behind the planet.
-        filter: half === 'back' ? 'blur(16px)' : 'blur(4px)',
+        filter: half === 'back' ? 'blur(10px)' : 'blur(4px)',
       }}
     >
       <canvas ref={canvasRef} className="h-full w-full" />
