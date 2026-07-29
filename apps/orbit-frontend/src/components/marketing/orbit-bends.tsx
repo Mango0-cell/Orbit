@@ -82,10 +82,11 @@ void main(){
   float alpha = band;
 
   // Wrap split along the ring's tilted MAJOR AXIS (pr.y = the near/far divider,
-  // crossing the ellipse exactly at its edge-on endpoints). pr.y < 0 = near side
-  // (in FRONT of the planet); pr.y > 0 = far side (BEHIND the planet).
-  if (u_half > 0.5) alpha *= smoothstep(0.012, -0.012, pr.y);       // front (near)
-  else if (u_half < -0.5) alpha *= smoothstep(-0.012, 0.012, pr.y); // back (far)
+  // crossing the ellipse at its edge-on endpoints). pr.y < 0 = near (FRONT of the
+  // planet); pr.y > 0 = far (BEHIND). Each half stays FULLY opaque up to the
+  // divider and overlaps slightly past it, so the two halves meet with no gap.
+  if (u_half > 0.5) alpha *= 1.0 - smoothstep(0.0, 0.05, pr.y);        // front (near)
+  else if (u_half < -0.5) alpha *= 1.0 - smoothstep(0.0, 0.05, -pr.y); // back (far)
 
   gl_FragColor = vec4(col, alpha);
 }`;
