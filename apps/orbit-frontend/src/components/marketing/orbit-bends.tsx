@@ -15,7 +15,7 @@ type Half = 'back' | 'front' | 'full';
 
 // Colors sampled directly from the Orbit logo (orbit-logo.webp), hue-ordered
 // into its real fiery ramp: deep red → red-orange → orange → amber → pale gold.
-const WARM = ['#d7463d', '#e45530', '#eb8743', '#f59f27', '#f7af42'];
+const WARM = ['#d74c3d', '#e45530', '#eb7343', '#f58727'];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -158,7 +158,7 @@ export function OrbitBends({
     gl.uniform1f(U('u_tilt'), (18 * Math.PI) / 180);
     gl.uniform1f(U('u_thickness'), 0.2);
     gl.uniform1f(U('u_half'), half === 'front' ? 1 : half === 'back' ? -1 : 0);
-    gl.uniform1f(U('u_speed'), 0.28);
+    gl.uniform1f(U('u_speed'), 0.55);
     gl.uniform1f(U('u_freq'), 1);
     gl.uniform1f(U('u_bandWidth'), 6);
     gl.uniform1f(U('u_intensity'), 1.0);
