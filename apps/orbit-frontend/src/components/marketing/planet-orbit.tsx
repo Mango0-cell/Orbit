@@ -48,7 +48,7 @@ export function PlanetOrbit({
         left: '93%',
         top: '55%',
         transform: 'translate(-50%, -50%)',
-        width: 'min(180vh, 100vw, 1180px)',
+        width: 'min(180vh, 100vw)',
         aspectRatio: '1 / 1',
         pointerEvents: 'none',
         WebkitMaskImage: mask,
