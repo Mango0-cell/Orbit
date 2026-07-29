@@ -6,12 +6,9 @@ import { motion, useReducedMotion } from 'motion/react';
 /**
  * Hero title — the Orbit wordmark assembled from the Stitch "Logo Asset
  * Decomposition" pieces (separate O/r/b/i/t letters, saturation-keyed off the
- * sheet). Each letter reveals one-by-one (blur + fade + rise). Two orbits from
- * the sheet are then drawn slowly and softly, layered in front of the letters:
- * the Planet Ring around the O, and the Grand Orbital Swoosh over the last
- * letters. Images are `unoptimized` so their transparency stays pristine.
- * Reduced-motion renders it fully assembled. left/top/width/height are % of the
- * wordmark box (560 x 205).
+ * sheet). Each letter reveals one-by-one (blur + fade + rise). Images are
+ * `unoptimized` so their transparency stays pristine. Reduced-motion renders it
+ * fully assembled. left/top/width/height are % of the wordmark box (560 x 205).
  */
 const LETTERS = [
   { src: '/orbit2-o.webp', left: 0, top: 0, width: 33.75, height: 99.51, w: 306, h: 331 },
@@ -26,7 +23,6 @@ export function HeroLogoTitle() {
 
   return (
     <h1 className="orbit-logo relative mb-6">
-      <style>{ORBIT_CSS}</style>
       <span className="sr-only">Orbit</span>
       <span
         aria-hidden
@@ -37,7 +33,7 @@ export function HeroLogoTitle() {
           filter: 'drop-shadow(0 8px 30px rgba(255, 86, 51, 0.25))',
         }}
       >
-        {/* Letters — reveal one-by-one, behind the orbits. */}
+        {/* Letters — reveal one-by-one. */}
         {LETTERS.map((L, i) => (
           <motion.span
             key={i}
@@ -70,79 +66,7 @@ export function HeroLogoTitle() {
             />
           </motion.span>
         ))}
-
-        {/* Planet Ring — drawn slowly around the O, in front. */}
-        <div
-          className={`orbit-draw absolute ${reduce ? '' : 'orbit-animate'}`}
-          style={{
-            left: '17%',
-            top: '49%',
-            width: '52%',
-            zIndex: 20,
-            transform: 'translate(-50%, -50%)',
-            mixBlendMode: 'screen',
-            animationDelay: '0.5s',
-          }}
-        >
-          <Image
-            src="/orbit2-ring.webp"
-            alt=""
-            aria-hidden
-            width={371}
-            height={277}
-            unoptimized
-            className="h-auto w-full"
-          />
-        </div>
-
-        {/* Grand Orbital Swoosh — drawn slowly over the last letters, in front. */}
-        <div
-          className={`orbit-draw absolute ${reduce ? '' : 'orbit-animate'}`}
-          style={{
-            left: '74%',
-            top: '50%',
-            width: '64%',
-            zIndex: 20,
-            transform: 'translate(-50%, -50%)',
-            mixBlendMode: 'screen',
-            animationDelay: '1.25s',
-          }}
-        >
-          <Image
-            src="/orbit2-swoosh.webp"
-            alt=""
-            aria-hidden
-            width={465}
-            height={312}
-            unoptimized
-            className="h-auto w-full"
-          />
-        </div>
       </span>
     </h1>
   );
 }
-
-const ORBIT_CSS = `
-@property --orbit-draw {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 100%;
-}
-.orbit-draw {
-  --orbit-draw: 100%;
-  -webkit-mask-image: conic-gradient(from -90deg, #000 var(--orbit-draw), transparent 0);
-  mask-image: conic-gradient(from -90deg, #000 var(--orbit-draw), transparent 0);
-}
-.orbit-animate {
-  animation: orbit-draw-kf 2.6s cubic-bezier(0.33, 0, 0.2, 1) both;
-}
-@keyframes orbit-draw-kf {
-  0% { --orbit-draw: 0%; opacity: 0; }
-  12% { opacity: 1; }
-  100% { --orbit-draw: 100%; opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .orbit-animate { animation: none; --orbit-draw: 100%; }
-}
-`;
