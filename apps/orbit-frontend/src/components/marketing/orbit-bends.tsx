@@ -31,6 +31,8 @@ void main(){ gl_Position = vec4(a_position, 0.0, 1.0); }`;
 
 const FRAG = `precision highp float;
 uniform vec2 u_res;
+uniform vec2 u_center;
+uniform float u_aspect;
 uniform float u_time, u_rx, u_ry, u_tilt, u_thickness, u_half;
 uniform float u_speed, u_freq, u_bandWidth, u_intensity, u_around, u_across, u_shine;
 uniform int u_ncol;
@@ -38,7 +40,9 @@ uniform vec3 u_colors[8];
 
 void main(){
   vec2 uv = gl_FragCoord.xy / u_res.xy;      // 0..1 (y up)
-  vec2 p = uv - 0.5;
+  // Full-screen canvas: the orbit is placed here, centred on the planet, in
+  // aspect-corrected (height-relative) units — no container edge to clip it.
+  vec2 p = (uv - u_center) * vec2(u_aspect, 1.0);
   float ct = cos(-u_tilt), st = sin(-u_tilt);
   vec2 pr = vec2(p.x * ct - p.y * st, p.x * st + p.y * ct);
   vec2 e = vec2(pr.x / u_rx, pr.y / u_ry);   // ellipse space: |e|=1 on centerline
@@ -141,16 +145,18 @@ export function OrbitBends({
     const U = (n: string) => gl.getUniformLocation(prog, n);
     const uTime = U('u_time');
     const uRes = U('u_res');
+    const uAspect = U('u_aspect');
     const rgb = WARM.map(hexToRgb);
     gl.uniform1i(U('u_ncol'), rgb.length);
     for (let i = 0; i < rgb.length; i++) {
       gl.uniform3fv(U(`u_colors[${i}]`), rgb[i]);
     }
-    // Match the orbit path already drawn around the planet.
-    gl.uniform1f(U('u_rx'), 0.47);
-    gl.uniform1f(U('u_ry'), 0.15);
+    // Orbit centred on the planet (uv, bottom-up), radii in height-relative units.
+    gl.uniform2f(U('u_center'), 0.93, 0.45);
+    gl.uniform1f(U('u_rx'), 0.9);
+    gl.uniform1f(U('u_ry'), 0.22);
     gl.uniform1f(U('u_tilt'), (-20 * Math.PI) / 180);
-    gl.uniform1f(U('u_thickness'), 0.24);
+    gl.uniform1f(U('u_thickness'), 0.2);
     gl.uniform1f(U('u_half'), half === 'front' ? 1 : half === 'back' ? -1 : 0);
     gl.uniform1f(U('u_speed'), 0.28);
     gl.uniform1f(U('u_freq'), 1);
@@ -174,6 +180,7 @@ export function OrbitBends({
       gl.clear(gl.COLOR_BUFFER_BIT);
       if (uTime) gl.uniform1f(uTime, (now - startT) / 1000);
       if (uRes) gl.uniform2f(uRes, w, h);
+      if (uAspect) gl.uniform1f(uAspect, w / h);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       if (!reduce) raf = requestAnimationFrame(draw);
     };
@@ -189,15 +196,7 @@ export function OrbitBends({
     <div
       aria-hidden
       className={className}
-      style={{
-        position: 'absolute',
-        left: '93%',
-        top: '55%',
-        transform: 'translate(-50%, -50%)',
-        width: 'min(180vh, 100vw)',
-        aspectRatio: '1 / 1',
-        pointerEvents: 'none',
-      }}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
     >
       <canvas ref={canvasRef} className="h-full w-full" />
     </div>
