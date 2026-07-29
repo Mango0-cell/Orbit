@@ -15,7 +15,7 @@ type Half = 'back' | 'front' | 'full';
 
 // Colors sampled directly from the Orbit logo (orbit-logo.webp), hue-ordered
 // into its real fiery ramp: deep red → red-orange → orange → amber → pale gold.
-const WARM = ['#d7463d', '#e45530', '#eb8743', '#f3b765', '#fbe08b'];
+const WARM = ['#d7463d', '#e45530', '#eb8743', '#f59f27', '#f7af42'];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -34,7 +34,7 @@ uniform vec2 u_res;
 uniform vec2 u_center;
 uniform float u_aspect;
 uniform float u_time, u_rx, u_ry, u_tilt, u_thickness, u_half;
-uniform float u_speed, u_freq, u_bandWidth, u_intensity, u_around, u_across, u_shine;
+uniform float u_speed, u_freq, u_bandWidth, u_intensity, u_around, u_across, u_shine, u_opacity;
 uniform int u_ncol;
 uniform vec3 u_colors[8];
 
@@ -82,8 +82,8 @@ void main(){
   float shine = pow(cover, 2.0) * band;                // tighter sheen, flows where field peaks
   col += vec3(1.0, 0.86, 0.55) * shine * u_shine;      // warm-gold specular glint (added after)
   col = clamp(col, 0.0, 1.25);
-  // Front half is opaque so it HIDES the planet with the ribbon's shape.
-  float alpha = band;
+  // Translucent so the planet reads through it — same visual weight, not occluding.
+  float alpha = band * u_opacity;
 
   // Wrap split along the ring's tilted MAJOR AXIS (pr.y = the near/far divider,
   // crossing the ellipse at its edge-on endpoints). pr.y < 0 = near (FRONT of the
@@ -161,10 +161,11 @@ export function OrbitBends({
     gl.uniform1f(U('u_speed'), 0.28);
     gl.uniform1f(U('u_freq'), 1);
     gl.uniform1f(U('u_bandWidth'), 6);
-    gl.uniform1f(U('u_intensity'), 1.35);
+    gl.uniform1f(U('u_intensity'), 1.0);
     gl.uniform1f(U('u_around'), 3.0);
     gl.uniform1f(U('u_across'), 0.6);
-    gl.uniform1f(U('u_shine'), 0.7);
+    gl.uniform1f(U('u_shine'), 0.3);
+    gl.uniform1f(U('u_opacity'), 0.8); // translucent — same weight as the planet
 
     let raf = 0;
     const startT = performance.now();
