@@ -6,17 +6,17 @@ import {
 import { FadeIn } from '@/components/motion/fade-in';
 import { StarBorder } from '@/components/motion/star-border';
 import { PlanetField } from '@/components/marketing/planet-field';
-import { PlanetOrbit } from '@/components/marketing/planet-orbit';
+import { OrbitBends } from '@/components/marketing/orbit-bends';
 import { HeroLogoTitle } from '@/components/marketing/hero-logo-title';
 
 export function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden">
-      {/* Orbit ring (ColorBends), wrapping the planet: far half behind it… */}
-      <PlanetOrbit half="back" className="z-0" />
+      {/* Orbit ribbon (ColorBends flowing along the orbit): far half behind… */}
+      <OrbitBends half="back" className="z-0" />
       <PlanetField className="absolute inset-0 z-[1]" />
-      {/* …near half in front of it, completing the Saturn-style wrap. */}
-      <PlanetOrbit half="front" className="z-[2]" />
+      {/* …near half in front of the planet, completing the Saturn-style wrap. */}
+      <OrbitBends half="front" className="z-[2]" />
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 pt-24 md:px-12 lg:grid-cols-2">
         <div className="flex flex-col items-start text-left">
