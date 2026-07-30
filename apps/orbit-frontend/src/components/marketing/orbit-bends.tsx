@@ -15,13 +15,13 @@ type Half = 'back' | 'front' | 'full';
 
 // Colors sampled directly from the Orbit logo (orbit-logo.webp), hue-ordered
 // into its real fiery ramp: deep red → red-orange → orange → amber → pale gold.
-const WARM = ['#d7733dc6', '#e47230d5', '#eb8643bb'];
+const WARM = ['#d45e1eaf', '#cf5c19d5', '#a54505bb', '#e65d03bb'];
 
 // Opacity of the ribbon at 8 evenly-spaced points AROUND the ring (n = 0..1,
 // where n≈0/1 is the far-left tip, n≈0.25 the near/front-bottom, n≈0.5 the right,
 // n≈0.75 the far/back-top). Edit any stop to manage that part's opacity. The
 // shader interpolates smoothly between stops.
-const OPACITY_STOPS = [0.6, 0.7, 1.2, 2.3, 2.2, 0.55, 0.6, 0.6, 1.6];
+const OPACITY_STOPS = [0.6, 0.7, 1.2, 2.3, 2.2, 0.55, 0.6, 0.6, 0.6];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -43,7 +43,7 @@ uniform float u_time, u_rx, u_ry, u_tilt, u_thickness, u_half;
 uniform float u_speed, u_freq, u_bandWidth, u_intensity, u_around, u_across, u_shine, u_opacity;
 uniform int u_ncol;
 uniform vec3 u_colors[8];
-uniform float u_op[8];   // per-part opacity around the ring (8 stops)
+uniform float u_op[9];   // per-part opacity around the ring (8 stops)
 
 void main(){
   vec2 uv = gl_FragCoord.xy / u_res.xy;      // 0..1 (y up)
@@ -108,9 +108,12 @@ void main(){
   // where it crosses the planet it sits ON TOP of it; it only hands off to the
   // blurred BACK layer past the edge-on crossover (pr.y > 0), where the blur then
   // intensifies toward the far side.
-  float blurAmt = smoothstep(0.0, u_ry, pr.y);     // 0 across the near side, 1 at back
-  if (u_half > 0.5) alpha *= 1.0 - blurAmt;        // front layer — solid over the near side
-  else if (u_half < -0.5) alpha *= blurAmt;        // back layer — far side, blurred
+  // Front & back OVERLAP generously through the crossover so the two arcs always
+  // meet at the edge-on tips — no empty notch. Front stays full across the near
+  // side and well past the tip; back rises before the tip. In the overlap both
+  // are strong (sum > 1), guaranteeing continuous coverage.
+  if (u_half > 0.5) alpha *= 1.0 - smoothstep(u_ry * 0.35, u_ry * 1.15, pr.y); // front
+  else if (u_half < -0.5) alpha *= smoothstep(-u_ry * 0.15, u_ry * 0.7, pr.y); // back
 
   gl_FragColor = vec4(col, alpha);
 }`;
@@ -172,10 +175,16 @@ export function OrbitBends({
       gl.uniform3fv(U(`u_colors[${i}]`), rgb[i]);
     }
     // Per-part opacity stops around the ring.
-    gl.uniform1fv(U('u_op'), new Float32Array(OPACITY_STOPS));
+    // Upload exactly 8 stops (pad/truncate) — the shader's u_op is an 8-array.
+    gl.uniform1fv(
+      U('u_op'),
+      new Float32Array(
+        Array.from({ length: 8 }, (_, i) => OPACITY_STOPS[i] ?? 1),
+      ),
+    );
     // Orbit centred on the planet (uv, bottom-up), radii in height-relative units.
     gl.uniform2f(U('u_center'), 0.93, 0.45);
-    gl.uniform1f(U('u_rx'), 0.8);
+    gl.uniform1f(U('u_rx'), 0.75);
     gl.uniform1f(U('u_ry'), 0.20);
     gl.uniform1f(U('u_tilt'), (18 * Math.PI) / 180);
     gl.uniform1f(U('u_thickness'), 0.2);
@@ -227,7 +236,7 @@ export function OrbitBends({
         // carries a soft base blur, the back layer a much heavier one. Combined
         // with the shader's front→back alpha crossfade, the blur ramps up toward
         // the back so it clearly reads as receding behind the planet.
-        filter: half === 'back' ? 'blur(10px)' : 'blur(4px)',
+        filter: half === 'back' ? 'blur(10px)' : 'blur(6px)',
       }}
     >
       <canvas ref={canvasRef} className="h-full w-full" />
