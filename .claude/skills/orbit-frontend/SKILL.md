@@ -9,7 +9,11 @@ Read `CLAUDE.md §3` (frontend stack). Invoke `frontend-design:frontend-design` 
 direction), `ui-ux-pro-max:ui-ux-pro-max`, `vercel:nextjs`, and `vercel:react-best-practices`.
 Review with `ecc:typescript-reviewer`.
 
+**Companion skills:** `orbit-design-system` (Event Horizon tokens + UI primitives),
+`orbit-motion` (animations/WebGL), `orbit-reactbits` (adapt reactbits.dev components).
+
 ## Source of truth — Stitch MCP
+
 - Project: **Cosmic Home Feed** — `projects/2502185355208638569` (design system **"Event Horizon"**).
 - Read the screen before coding: `mcp__stitch__list_screens` → `mcp__stitch__get_screen`
   (and `mcp__stitch__get_project` for tokens / DESIGN.md; `mcp__stitch__get_screenshot` for reference).
@@ -17,6 +21,7 @@ Review with `ecc:typescript-reviewer`.
   unless the user asks.
 
 ## Design tokens (Event Horizon — keep consistent)
+
 Dark mode. surface `#111415`, primary **Cosmic Cyan `#00ffff`**, secondary **Nebula Purple**,
 on-surface `#e2e2e4`. Fonts: **Space Grotesk** (headline), **Hanken Grotesk** (body),
 **JetBrains Mono** (labels/metadata). Glassmorphism: translucent surfaces + `backdrop-blur(20px)`,
@@ -24,6 +29,7 @@ on-surface `#e2e2e4`. Fonts: **Space Grotesk** (headline), **Hanken Grotesk** (b
 theme tokens in `apps/orbit-frontend/src/app/global.css`.
 
 ## Steps
+
 1. Pull the target screen + tokens from Stitch (MCP).
 2. Build the screen under `apps/orbit-frontend/src/app/...` (App Router). Componentize; reuse tokens.
 3. Data: call services through env base URLs (`NEXT_PUBLIC_USERS_API`, `NEXT_PUBLIC_CONTENT_API`,
@@ -32,5 +38,6 @@ theme tokens in `apps/orbit-frontend/src/app/global.css`.
 5. Test (Jest + Testing Library); `ecc:typescript-reviewer`.
 
 ## Definition of Done
+
 Matches the Stitch screen + Event Horizon tokens · responsive + a11y · wired via env ·
 tests green. **Do not push.**
