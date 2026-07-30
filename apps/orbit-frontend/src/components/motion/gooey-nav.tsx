@@ -139,7 +139,9 @@ export function GooeyNav({
     setActiveIndex(index);
     updateEffectPosition(anchorEl);
     if (filterRef.current) {
-      filterRef.current.querySelectorAll('.particle').forEach((p) => p.remove());
+      filterRef.current
+        .querySelectorAll('.particle')
+        .forEach((p) => p.remove());
       makeParticles(filterRef.current);
     }
     if (textRef.current) {
@@ -152,7 +154,10 @@ export function GooeyNav({
   const handleClick = (e: MouseEvent<HTMLAnchorElement>, index: number) =>
     activate(e.currentTarget, index);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLAnchorElement>, index: number) => {
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLAnchorElement>,
+    index: number,
+  ) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     // Space would scroll the page; Enter is left to native <a href> navigation.
     if (e.key === ' ') e.preventDefault();

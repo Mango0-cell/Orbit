@@ -23,13 +23,16 @@ export function Hero() {
           <HeroLogoTitle />
           <FadeIn delay={0.95}>
             <p className="mb-12 max-w-xl text-body-lg text-on-surface-variant">
-              Harness the power of an intelligent, decentralized network designed
-              to withstand the extremes of deep space communication and stellar
-              discovery.
+              Harness the power of an intelligent, decentralized network
+              designed to withstand the extremes of deep space communication and
+              stellar discovery.
             </p>
           </FadeIn>
           <FadeIn delay={1.2} className="flex flex-col gap-6 sm:flex-row">
-            <StarBorder href="/signup" innerClassName="px-8 py-4 text-label-md font-bold">
+            <StarBorder
+              href="/signup"
+              innerClassName="px-8 py-4 text-label-md font-bold"
+            >
               Initiate Sequence
               <MdRocketLaunch className="text-lg" aria-hidden />
             </StarBorder>

@@ -131,7 +131,10 @@ export function OrbitBends({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: false });
+    const gl = canvas.getContext('webgl', {
+      alpha: true,
+      premultipliedAlpha: false,
+    });
     if (!gl) return;
 
     const sh = (type: number, src: string) => {
@@ -185,7 +188,7 @@ export function OrbitBends({
     // Orbit centred on the planet (uv, bottom-up), radii in height-relative units.
     gl.uniform2f(U('u_center'), 0.93, 0.45);
     gl.uniform1f(U('u_rx'), 0.75);
-    gl.uniform1f(U('u_ry'), 0.20);
+    gl.uniform1f(U('u_ry'), 0.2);
     gl.uniform1f(U('u_tilt'), (18 * Math.PI) / 180);
     gl.uniform1f(U('u_thickness'), 0.2);
     gl.uniform1f(U('u_half'), half === 'front' ? 1 : half === 'back' ? -1 : 0);

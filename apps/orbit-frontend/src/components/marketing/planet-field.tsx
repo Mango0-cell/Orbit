@@ -106,7 +106,13 @@ export function PlanetField({ className }: { className?: string }) {
     const sinT = Math.sin(TILT);
 
     // Rotate a unit point by current Y-angle then fixed X-tilt.
-    const rotate = (x: number, y: number, z: number, ca: number, sa: number) => {
+    const rotate = (
+      x: number,
+      y: number,
+      z: number,
+      ca: number,
+      sa: number,
+    ) => {
       const rx = x * ca + z * sa;
       const rz = -x * sa + z * ca;
       const ry = y * cosT - rz * sinT;
@@ -221,7 +227,7 @@ export function PlanetField({ className }: { className?: string }) {
       canvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // Anchor the planet toward the lower-right, a touch smaller.
-      R = Math.min(height * 0.50, width * 0.28, 325);
+      R = Math.min(height * 0.5, width * 0.28, 325);
       cx = width > 900 ? width * 0.93 : width * 0.62;
       cy = height * 0.55;
       if (reduce) draw();

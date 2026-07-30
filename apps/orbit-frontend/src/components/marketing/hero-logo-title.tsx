@@ -14,11 +14,51 @@ import { motion, useReducedMotion } from 'motion/react';
  * wordmark box (560 x 205).
  */
 const LETTERS = [
-  { src: '/orbit2-o.webp', left: 0, top: 0, width: 33.75, height: 99.51, w: 306, h: 331 },
-  { src: '/orbit2-r.webp', left: 33.93, top: 20.98, width: 16.61, height: 79.02, w: 133, h: 232 },
-  { src: '/orbit2-b.webp', left: 42.32, top: 6.83, width: 29.82, height: 92.2, w: 239, h: 271 },
-  { src: '/orbit2-i.webp', left: 70.36, top: 12.2, width: 12.5, height: 87.8, w: 101, h: 258 },
-  { src: '/orbit2-t.webp', left: 79.46, top: 17.07, width: 20.54, height: 81.46, w: 165, h: 240 },
+  {
+    src: '/orbit2-o.webp',
+    left: 0,
+    top: 0,
+    width: 33.75,
+    height: 99.51,
+    w: 306,
+    h: 331,
+  },
+  {
+    src: '/orbit2-r.webp',
+    left: 33.93,
+    top: 20.98,
+    width: 16.61,
+    height: 79.02,
+    w: 133,
+    h: 232,
+  },
+  {
+    src: '/orbit2-b.webp',
+    left: 42.32,
+    top: 6.83,
+    width: 29.82,
+    height: 92.2,
+    w: 239,
+    h: 271,
+  },
+  {
+    src: '/orbit2-i.webp',
+    left: 70.36,
+    top: 12.2,
+    width: 12.5,
+    height: 87.8,
+    w: 101,
+    h: 258,
+  },
+  {
+    src: '/orbit2-t.webp',
+    left: 79.46,
+    top: 17.07,
+    width: 20.54,
+    height: 81.46,
+    w: 165,
+    h: 240,
+  },
 ];
 
 export function HeroLogoTitle() {
@@ -55,7 +95,11 @@ export function HeroLogoTitle() {
             transition={
               reduce
                 ? { duration: 0 }
-                : { duration: 0.6, delay: 0.15 + i * 0.16, ease: [0.22, 1, 0.36, 1] }
+                : {
+                    duration: 0.6,
+                    delay: 0.15 + i * 0.16,
+                    ease: [0.22, 1, 0.36, 1],
+                  }
             }
           >
             <Image

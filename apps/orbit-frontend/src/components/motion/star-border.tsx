@@ -66,9 +66,17 @@ export function StarBorder({
 
   const chrome = (
     <>
-      <span className="star-border-blob star-border-blob-top" aria-hidden="true" />
-      <span className="star-border-blob star-border-blob-bottom" aria-hidden="true" />
-      <span className={cn('star-border-inner', innerClassName)}>{children}</span>
+      <span
+        className="star-border-blob star-border-blob-top"
+        aria-hidden="true"
+      />
+      <span
+        className="star-border-blob star-border-blob-bottom"
+        aria-hidden="true"
+      />
+      <span className={cn('star-border-inner', innerClassName)}>
+        {children}
+      </span>
     </>
   );
 

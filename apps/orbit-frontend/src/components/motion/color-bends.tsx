@@ -223,7 +223,9 @@ export function ColorBends({
     const ro = new ResizeObserver(resize);
     ro.observe(container);
 
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
     let raf = 0;
     const loop = () => {
       const dt = clock.getDelta();
